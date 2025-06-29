@@ -1,0 +1,10 @@
+export const BASE_URL = "http://localhost:5000/api";
+export const AUTH_URL = "/auth";
+export const USER_URL = "/user";
+export const PRODUCT_URL = "/products";
+export const CART_URL = "/cart";
+export const ORDERS_URL = "/orders";
+export const PAYMENTS_URL = "/payments";
+export const ADMIN_URL = "/admin";
+export const WISHLIST_URL = "/wishlist";
+export const CATEGORY_URL = "/category";
