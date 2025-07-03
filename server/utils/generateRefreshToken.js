@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
  */
 const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "30d", // Refresh token valid for 30 days
+    expiresIn: "7d", // Refresh token valid for 7 days
   });
 };
 

@@ -4,10 +4,11 @@ const {
   updateUser,
 } = require("../controllers/user_management/userController");
 const { authenticate } = require("../middleware/authMiddleware");
+const upload = require("../middleware/upload");
 
 router
   .route("/profile")
   .get(authenticate, getUser)
-  .patch(authenticate, updateUser);
+  .patch(authenticate, upload.single("profileImage"), updateUser);
 
 module.exports = router;

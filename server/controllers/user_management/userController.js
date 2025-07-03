@@ -8,86 +8,87 @@ const { formidable } = require("formidable"); // Parses multipart/form-data (use
 const xss = require("xss"); // Sanitizes strings to prevent cross-site scripting (XSS) attacks
 const path = require("path"); // Helps resolve file and directory paths
 const { updateUserSchema } = require("../../joiSchemas/authSchema"); // Joi validation schema for updating users
+const cloudinary = require("../../utils/cloudinary");
 
-// Define the updateUser controller function
+// @desc    Update user profile
+// @route   PATCH /api/users/profile
+// @access  Private
 exports.updateUser = asyncHandler(async (req, res) => {
-  // Set up the formidable instance to parse incoming form data
-  const form = formidable({
-    multiples: false, // Only allow a single file per field
-    uploadDir: path.join(__dirname, "../uploads"), // Temporarily save uploaded files to the /uploads directory
-    keepExtensions: true, // Preserve the original file extension (e.g., .jpg, .png)
+  // Sanitize text input
+  const updates = {
+    firstName: xss(req.body.firstName || ""),
+    lastName: xss(req.body.lastName || ""),
+    email: xss(req.body.email || ""),
+    phone: xss(req.body.phone || ""),
+  };
+
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Check if a new image was uploaded
+  if (req.file) {
+    // If user already has a custom profile image, remove it from Cloudinary
+    const prevImageUrl = user.profileImage;
+    const defaultImage =
+      "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+
+    if (prevImageUrl && !prevImageUrl.includes("pixabay")) {
+      // Extract public_id from the URL
+      const publicId = prevImageUrl.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`profile_pictures/${publicId}`);
+    }
+
+    console.log(req.file);
+
+    // Upload new image to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload_stream(
+      {
+        folder: "profile_pictures",
+        resource_type: "image",
+      },
+      async (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return res
+            .status(500)
+            .json({ message: "Image upload failed", error });
+        }
+
+        // Save new image URL
+        updates.profileImage = result.secure_url;
+
+        // Finalize update and respond
+        const updatedUser = await User.findByIdAndUpdate(
+          req.user._id,
+          updates,
+          {
+            new: true,
+          }
+        );
+
+        res.status(200).json({
+          message: "User successfully updated!",
+          user: updatedUser,
+        });
+      }
+    );
+
+    // Pipe the buffer from multer into cloudinary's upload_stream
+    require("streamifier").createReadStream(req.file.buffer).pipe(uploadResult);
+
+    return; // wait for upload stream to finish before returning
+  }
+
+  // If no image uploaded, just update the text fields
+  const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
+    new: true,
   });
 
-  // Parse the incoming form request
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      // If parsing fails, return a 400 Bad Request
-      console.error("Formidable error:", err);
-      return res.status(400).json({ message: "Invalid form data" });
-    }
-
-    // Helper function to normalize form fields (convert single-item arrays to string values)
-    const normalize = (val) => (Array.isArray(val) ? val[0] : val);
-
-    // Sanitize all incoming fields using xss to prevent malicious script injection
-    const normalizedFields = {};
-    for (const key in fields) {
-      const value = normalize(fields[key]); // Normalize single-item arrays
-      normalizedFields[key] =
-        typeof value === "string" ? xss(value.trim()) : value;
-    }
-
-    // Validate sanitized input using Joi schema
-    const { error, value } = updateUserSchema.validate(normalizedFields);
-
-    // If validation fails, respond with a 400 and detailed error messages
-    if (error) {
-      return res.status(400).json({
-        message: "Validation failed",
-        error: error.details.map((detail) => detail.message),
-      });
-    }
-
-    // If a profile image was uploaded, process it
-    if (files.profileImage) {
-      // Get the correct filepath regardless of whether it's a single object or an array
-      const imagePath = `/uploads/${path.basename(
-        files.profileImage[0]?.filepath || files.profileImage.filepath
-      )}`;
-
-      // Add the image URL to the value object to be saved in the database
-      value.profileImage = imagePath;
-    }
-
-    try {
-      // Update the user in MongoDB using their authenticated ID
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user._id, // ID of the authenticated user (set by your authentication middleware)
-        { $set: value }, // Fields to update (sanitized and validated)
-        { new: true, runValidators: true } // Return the updated document and enforce schema rules
-      );
-
-      // If the user doesn't exist, return a 404 Not Found
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Respond with the updated user data
-      res.status(200).json({
-        message: "User successfully updated!",
-        data: updatedUser,
-      });
-    } catch (error) {
-      // Handle unexpected errors (e.g., database issues)
-      console.error("Error updating user:", error);
-      res.status(500).json({
-        message: "Internal server error",
-        error: error.message,
-      });
-    }
+  res.status(200).json({
+    message: "User successfully updated!",
+    user: updatedUser,
   });
 });
-
 // @desc    Get logged-in user's profile + their order history
 // @route   GET /api/users/profile
 // @access  Private

@@ -88,8 +88,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(userId, { isVerified: true });
 
     // Respond with a success message
-    res.send("email verified");
-    // res.redirect("http://localhost:5173/email-verified");
+    res.redirect("http://localhost:5173/email-verified");
   } catch (error) {
     // If the token is invalid or expired, return a 400 Bad Request error
     res.status(400).json({ message: "Invalid or expired token" });
@@ -141,18 +140,13 @@ exports.loginUser = asyncHandler(async (req, res) => {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 
+  const userObj = user.toObject();
+  delete userObj.password;
+
   // Send access token and basic user info in response
   res.status(200).json({
     accessToken,
-    user: {
-      _id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      isVerified: user.isVerified,
-      role: user.role,
-      status: user.status,
-    },
+    user: userObj,
   });
 });
 
@@ -198,14 +192,7 @@ exports.refreshToken = asyncHandler(async (req, res) => {
     // Send the new access token in response
     res.status(200).json({
       accessToken,
-      user: {
-        _id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isVerified: user.isVerified,
-        role: user.role,
-      },
+      user,
     });
   } catch (err) {
     // If token is invalid or expired
@@ -305,4 +292,40 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
   // Step 7: Respond with success message
   res.json({ message: "Password updated successfully." });
+});
+
+/**
+ * Public route: Resets password using token sent via email (forgot-password flow).
+ * Token is passed as a URL parameter and used to identify the user.
+ */
+exports.resetPasswordWithToken = asyncHandler(async (req, res) => {
+  // Step 1: Hash the token received in the URL to compare it with the stored hash
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  // Step 2: Find user by the hashed token and ensure the token is not expired
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: Date.now() }, // Must be in the future
+  });
+
+  // Step 3: If token is invalid or expired, return error
+  if (!user) {
+    return res.status(400).json({ message: "Token is invalid or expired" });
+  }
+
+  // Step 4: Hash and save the new password
+  user.password = await bcrypt.hash(req.body.password, 10);
+
+  // Step 5: Remove the reset token and expiration from the database
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  // Step 6: Save the user
+  await user.save();
+
+  // Step 7: Send confirmation to client
+  res.json({ message: "Password has been reset successfully." });
 });
