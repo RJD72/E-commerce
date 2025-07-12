@@ -1,10 +1,10 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useRef, useState } from "react";
-import BackButton from "../../components/BackButton";
 import { useDispatch, useSelector } from "react-redux";
 import { useUpdateUserMutation } from "../../redux/api/userApiSlice";
 import { setCredentials } from "../../redux/features/authSlice";
-import { distance } from "motion/react";
+import BackButton from "../../components/BackButton";
+import FloatingInput from "../../components/FloatingInput";
+import { toast } from "react-toastify";
 
 const UserContact = () => {
   const [firstName, setFirstName] = useState("");
@@ -15,20 +15,16 @@ const UserContact = () => {
 
   const fileInputRef = useRef(null);
   const user = useSelector((state) => state.auth.user);
-  const [updateUser, { isLoading, error }] = useUpdateUserMutation();
+  const [updateUser] = useUpdateUserMutation();
   const dispatch = useDispatch();
 
   const handleClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file));
-    }
+    if (file) setImage(URL.createObjectURL(file));
   };
 
   useEffect(() => {
@@ -55,120 +51,97 @@ const UserContact = () => {
 
     try {
       const res = await updateUser(formData).unwrap();
-
       if (res?.user) {
         dispatch(setCredentials({ user: res.user }));
-        console.log(res.message || "User updated successfully");
+        toast.success(res.message || "User updated successfully", {
+          position: "top-center",
+          closeOnClick: true,
+        });
       }
     } catch (error) {
-      console.log("Error updating user:", error.message);
+      toast.error(`Error updating user:${error.message}`, {
+        position: "top-center",
+        closeOnClick: true,
+      });
     }
   };
 
   return (
-    <>
-      <section className="w-full">
-        <div className="space-y-8 max-w-[960px] m-auto divide-y divide-gray-200">
-          <BackButton fallback="/profile" />
-          <div className="bg-gradient-to-r from-indigo-800 to-blue-900 flex items-center justify-center p-4 rounded-2xl">
-            <div className="font-std mb-10 w-full rounded-2xl bg-white p-2 md:p-10 font-normal leading-relaxed text-gray-900 shadow-xl">
-              <div className="flex flex-col">
-                <div className="flex flex-col md:flex-row justify-between mb-5 items-start">
-                  <h2 className="mb-5 text-4xl font-bold text-blue-900">
-                    Contact Information
-                  </h2>
-                  <div className="text-center">
-                    <div>
-                      <img
-                        src={image || user?.profileImage}
-                        alt="Profile Picture"
-                        className="rounded-full w-32 h-32 mx-auto border-4 border-indigo-800 mb-4 transition-transform duration-300 hover:scale-105 ring ring-gray-300 cursor-pointer"
-                        onClick={handleClick}
-                      />
-                      <input
-                        type="file"
-                        name="profile"
-                        id="upload_profile"
-                        hidden
-                        required
-                        onChange={handleImageChange}
-                        ref={fileInputRef}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleClick}
-                      className="bg-gradient-to-r from-indigo-800 to-blue-900 text-white px-4 py-2 rounded-full hover:bg-red-900 transition-colors duration-300 ring ring-gray-300 hover:ring-indigo-300 cursor-pointer"
-                    >
-                      Change Profile Picture
-                    </button>
-                  </div>
-                </div>
+    <section className="flex justify-center items-center min-h-[calc(100vh-210px)] px-4">
+      <div className="w-full max-w-4xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.35)] rounded-[10px] p-[30px] box-border">
+        <BackButton fallback="/profile" />
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <input
-                      type="text"
-                      id="name"
-                      placeholder="First Name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full focus:ring-indigo-500 focus:border-indigo-500"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
+        <h2 className="text-center text-[28px] font-extrabold mb-[30px] font-sans text-blue-900">
+          Contact Information
+        </h2>
 
-                    <input
-                      type="text"
-                      id="title"
-                      placeholder="Last Name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full focus:ring-indigo-500 focus:border-indigo-500"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <input
-                      type="email"
-                      id="email"
-                      placeholder="Email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full focus:ring-indigo-500 focus:border-indigo-500"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <input
-                      type="tel"
-                      id="phone"
-                      placeholder="Phone"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full focus:ring-indigo-500 focus:border-indigo-500"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex flex-col md:flex-row justify-center md:justify-end gap-3">
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-indigo-800 text-white rounded-full hover:bg-indigo-700"
-                    >
-                      Reset Password
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-indigo-800 text-white rounded-full hover:bg-indigo-700"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={image || user?.profileImage}
+            alt="Profile"
+            className="rounded-full w-32 h-32 border-4 border-indigo-800 mb-4 object-cover shadow-md hover:scale-105 transition-transform cursor-pointer"
+            onClick={handleClick}
+          />
+          <input
+            type="file"
+            hidden
+            ref={fileInputRef}
+            onChange={handleImageChange}
+          />
+          <button
+            type="button"
+            onClick={handleClick}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-800 to-blue-900 text-white rounded-full hover:from-indigo-700 hover:to-blue-800 transition-colors"
+          >
+            Change Profile Picture
+          </button>
         </div>
-      </section>
-    </>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col md:flex-row justify-between gap-4">
+            <FloatingInput
+              label={"First Name"}
+              value={firstName}
+              onChange={setFirstName}
+            />
+
+            <FloatingInput
+              label={"Last Name"}
+              value={lastName}
+              onChange={setLastName}
+            />
+          </div>
+          <FloatingInput
+            type="email"
+            label={"Email"}
+            value={email}
+            onChange={setEmail}
+          />
+          <FloatingInput
+            type="tel"
+            label={"Phone"}
+            value={phone}
+            onChange={setPhone}
+          />
+
+          <div className="flex flex-col md:flex-row justify-center md:justify-end gap-3 pt-4">
+            <button
+              type="button"
+              className="px-4 py-2 bg-indigo-800 text-white rounded-full hover:bg-indigo-700 transition"
+            >
+              Reset Password
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-800 text-white rounded-full hover:bg-indigo-700 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
+
 export default UserContact;

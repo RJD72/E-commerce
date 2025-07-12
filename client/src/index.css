@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@theme {
+  --color-midnight-navy: #2c3e50; /* Deep blue/navy from jackets */
+  --color-slate-gray: #7f8c8d; /* Neutral gray from flooring */
+  --color-warm-taupe: #b29f91; /* Wood tones */
+  --color-off-white-linen: #f8f5f1; /* Background tone from walls/shirts */
+  --color-burnt-mustard: oklch(0.68 0.17 75); /* Accent: brown-orange/mustard */
+  --color-denim-blue: oklch(0.56 0.09 250); /* Accent: denim shirt blue */
+  --color-charcoal-black: oklch(0.18 0 0); /* Near black for dark UI areas */
+
+  /* Hover backgrounds */
+  --hover-bg-midnight-navy: var(--color-midnight-navy);
+  --hover-bg-slate-gray: var(--color-slate-gray);
+  --hover-bg-burnt-mustard: var(--color-burnt-mustard);
+  --hover-bg-denim-blue: var(--color-denim-blue);
+}

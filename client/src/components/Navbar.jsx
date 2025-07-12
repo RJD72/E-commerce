@@ -6,6 +6,7 @@ import { useLogoutUserMutation } from "../redux/api/authApiSlice";
 import { logoutUser } from "../redux/features/authSlice";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,8 +40,11 @@ const Navbar = () => {
     try {
       const res = await logout().unwrap();
       dispatch(logoutUser());
-      alert(res.message);
-      navigate("/");
+      toast.success("Successfully logged out", {
+        position: "top-center",
+        closeOnClick: true,
+      });
+      navigate("/", { state: { fromLogout: true } });
     } catch (error) {
       console.log("Logout failed:", error.message);
     }
@@ -153,6 +157,15 @@ const Navbar = () => {
                     >
                       Profile
                     </NavLink>
+                    {user.role === "admin" && (
+                      <NavLink
+                        to={"/admin-panel"}
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        onClick={() => setDropDownOpen(!dropDownOpen)}
+                      >
+                        Admin Panel
+                      </NavLink>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -180,7 +193,7 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      <nav className="hidden lg:block">
+      <nav className="hidden lg:block mb-16">
         <ul className="flex justify-center items-center gap-4">
           <li>Home</li>
           <li>Contact</li>

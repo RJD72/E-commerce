@@ -6,16 +6,40 @@ import { useLoginUserMutation } from "../../redux/api/authApiSlice";
 import { setCredentials } from "../../redux/features/authSlice";
 import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import FloatingInput from "../../components/FloatingInput";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [loginUser, { isLoading, error }] = useLoginUserMutation();
+  const [loginUser] = useLoginUserMutation();
+
+  const validate = () => {
+    const errs = {};
+
+    if (!email.trim()) errs.email = "Email is required";
+    if (!password.trim()) errs.password = "Password is required";
+
+    setFieldErrors(errs);
+
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validate()) {
+      toast.error("Please fill in all required fields", {
+        position: "top-center",
+        closeOnClick: true,
+      });
+      return;
+    }
+
     try {
       // 1. Call the login endpoint with credentials
       const res = await loginUser({ email, password }).unwrap();
@@ -28,12 +52,16 @@ const Login = () => {
       setPassword("");
       navigate("/");
     } catch (error) {
-      console.log("Login failed:", error.message);
+      const errorMsg = error.data.message;
+      setLoginError(errorMsg);
+      setEmail("");
+      setPassword("");
+
+      if (errorMsg?.includes("not been verified")) {
+        navigate("/resend-verification");
+      }
     }
   };
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <p>{error.message}</p>;
 
   return (
     <section className="flex justify-center items-center min-h-[calc(100vh-110px)]">
@@ -41,47 +69,55 @@ const Login = () => {
         <div className="hidden md:inline">
           <img src={Clothes} alt="" className="rounded-lg h-[500px]" />
         </div>
-        <div className="w-[350px] h-[500px] bg-white shadow-[0_5px_15px_rgba(0,0,0,0.35)] rounded-[10px] p-[20px_30px] box-border">
+        <div className="w-[350px] bg-white shadow-[0_5px_15px_rgba(0,0,0,0.35)] rounded-[10px] p-[20px_30px] box-border">
           <p className="text-center text-[28px] font-extrabold mb-[30px] mt-[10px] font-sans">
             Welcome back
           </p>
+          <p className="text-red-500 text-center mb-4">{loginError}</p>
           <form
             className="w-full flex flex-col gap-[18px] mb-[15px]"
             onSubmit={handleSubmit}
           >
-            <input
+            <FloatingInput
               type="email"
-              placeholder="Email"
-              className="rounded-full border border-gray-300 outline-none p-[12px_15px] box-border"
+              label={"Email"}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              onChange={setEmail}
+              error={!!fieldErrors.email}
+              helperText={fieldErrors.email}
             />
-            <input
+            <FloatingInput
               type="password"
-              placeholder="Password"
-              className="rounded-full border border-gray-300 outline-none p-[12px_15px] box-border"
+              label={"Password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={setPassword}
+              error={!!fieldErrors.password}
+              helperText={fieldErrors.password}
             />
+
             <p className="text-end underline text-[#747474] underline-offset-2 m-0">
-              <span className="cursor-pointer text-[9px] font-bold hover:text-black font-sans">
+              <Link
+                to={"/forgot-password"}
+                className="cursor-pointer text-[9px] font-bold hover:text-black font-sans"
+              >
                 Forgot Password?
-              </span>
+              </Link>
             </p>
             <button
               type="submit"
-              className="p-[10px_15px] rounded-full bg-gradient-to-r from-indigo-800 to-blue-900 hover:bg-red-500 text-white font-sans font-medium shadow-md active:shadow-none transition cursor-pointer"
+              className="p-[10px_15px] rounded-full bg-gradient-to-r from-indigo-800 to-blue-900 text-white font-sans font-medium shadow-md active:shadow-none transition cursor-pointer"
             >
               Log in
             </button>
           </form>
           <p className="text-[10px] text-[#747474] m-0 font-sans">
             Don't have an account?
-            <span className="ml-1 text-[11px] underline underline-offset-2 text-teal-600 font-extrabold cursor-pointer font-sans">
+            <Link
+              to={"/register"}
+              className="ml-1 text-[11px] underline underline-offset-2 text-blue-900 hover:text-blue-500 font-extrabold cursor-pointer font-sans"
+            >
               Sign up
-            </span>
+            </Link>
           </p>
           <div className="w-full flex flex-col justify-start mt-[20px] gap-[15px]">
             <div className="flex items-center justify-center gap-2 p-[10px_15px] bg-black text-white rounded-[20px] border-2 border-black cursor-pointer text-[11px] shadow-[0_10px_36px_0_rgba(0,0,0,0.16),0_0_0_1px_rgba(0,0,0,0.06)] font-sans">

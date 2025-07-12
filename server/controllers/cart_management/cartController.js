@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../../middleware/asyncHandler");
-const User = require("../../models/categoryModel");
+const User = require("../../models/userModels");
 const Product = require("../../models/productModel");
 
 // @desc    Get the logged-in user's cart

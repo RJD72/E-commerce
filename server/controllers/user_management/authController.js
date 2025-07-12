@@ -113,9 +113,9 @@ exports.loginUser = asyncHandler(async (req, res) => {
 
   // Prevent login if the user hasn't verified their email
   if (!user.isVerified) {
-    return res
-      .status(403)
-      .json({ message: "Please verify your email before logging in." });
+    return res.status(403).json({
+      message: "Your account has not been verified.",
+    });
   }
 
   // Prevent login if the user is "suspended"
@@ -231,15 +231,15 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     .update(token) // Apply it to the raw token
     .digest("hex"); // Output format
 
-  // Step 4: Set an expiry time for the token (1 hour from now)
-  user.resetPasswordExpires = Date.now() + 3600000;
+  // Step 4: Set an expiry time for the token (15 minutes from now)
+  user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
 
   // Save the token and expiry time to the user's record
   await user.save();
 
   // Step 5: Create a password reset URL using the plain token
   // This URL will be sent in the email, and the user will click it to reset their password
-  const resetUrl = `http://localhost:5000/api/user/reset-password/${token}`;
+  const resetUrl = `http://localhost:5173/reset-password/${token}`;
 
   // console.log("Raw token", token);
   // console.log("Reset token", resetUrl);
@@ -250,11 +250,14 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   await sendEmail(
     user.email, // Recipient
     "Password Reset", // Subject
-    `Reset your password: ${resetUrl}` // Email content
+    `Reset your password: <a href="${resetUrl}">here</a>` // Email content
   );
 
   // Step 7: Respond with a success message
-  res.json({ message: "Password reset link sent" });
+  res.status(200).json({
+    message:
+      "If an account with that email exists, a reset link has been sent.",
+  });
 });
 
 /** Reset Password Handler
@@ -279,6 +282,12 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   if (!user)
     return res.status(400).json({ message: "Token is invalid or expired" });
 
+  if (req.body.password !== req.body.confirmPassword) {
+    return res
+      .status(400)
+      .json({ message: "Password and Confirm Password do not match." });
+  }
+
   // Step 4: Hash the new password using bcrypt with a salt round of 10
   user.password = await bcrypt.hash(req.body.password, 10);
 
@@ -294,38 +303,53 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   res.json({ message: "Password updated successfully." });
 });
 
-/**
- * Public route: Resets password using token sent via email (forgot-password flow).
- * Token is passed as a URL parameter and used to identify the user.
- */
-exports.resetPasswordWithToken = asyncHandler(async (req, res) => {
-  // Step 1: Hash the token received in the URL to compare it with the stored hash
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
+// @desc    Resend the verification email to users who haven't verified yet
+// @route   POST /api/auth/resend-verification
+// @access  Public (email only)
+exports.resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-  // Step 2: Find user by the hashed token and ensure the token is not expired
-  const user = await User.findOne({
-    resetPasswordToken: hashedToken,
-    resetPasswordExpires: { $gt: Date.now() }, // Must be in the future
-  });
-
-  // Step 3: If token is invalid or expired, return error
-  if (!user) {
-    return res.status(400).json({ message: "Token is invalid or expired" });
+  // Step 1: Validate email presence
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
   }
 
-  // Step 4: Hash and save the new password
-  user.password = await bcrypt.hash(req.body.password, 10);
+  // Step 2: Find the user by email
+  const user = await User.findOne({ email });
 
-  // Step 5: Remove the reset token and expiration from the database
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpires = undefined;
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
 
-  // Step 6: Save the user
-  await user.save();
+  // Step 3: Check if the user is already verified
+  if (user.isVerified) {
+    return res
+      .status(400)
+      .json({ message: "This account has already been verified." });
+  }
 
-  // Step 7: Send confirmation to client
-  res.json({ message: "Password has been reset successfully." });
+  // Step 4: Generate a new verification token using JWT
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  // Step 5: Compose the email verification URL (to your frontend)
+  const verificationUrl = `http://localhost:5173/verify-email/${token}`;
+
+  // Step 6: Send email with the new verification link
+  await sendEmail({
+    to: user.email,
+    subject: "Verify Your Account - New Link",
+    html: `
+      <h2>Hello ${user.firstName || "there"},</h2>
+      <p>You requested a new verification link. Please click below to verify your account:</p>
+      <a href="${verificationUrl}">${verificationUrl}</a>
+      <p>This link will expire in 1 hour.</p>
+    `,
+  });
+
+  // Step 7: Respond with confirmation
+  res.status(200).json({ message: "Verification email resent successfully." });
 });

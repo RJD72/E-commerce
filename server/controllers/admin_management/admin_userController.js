@@ -5,7 +5,7 @@ const { asyncHandler } = require("../../middleware/asyncHandler");
 // @desc    Admin deactivates (suspends) a user account
 // @route   PUT /api/admin/users/:id/deactivate
 // @access  Private/Admin
-exports.deactivateUserById = asyncHandler(async (req, res) => {
+exports.toggleUserStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   // Find user by ID
@@ -23,13 +23,18 @@ exports.deactivateUserById = asyncHandler(async (req, res) => {
       .json({ message: "Admins cannot deactivate their own account" });
   }
 
-  // Set status to suspended
-  user.status = "suspended";
+  // Set status to suspended if active and active if suspended
+  user.status = user.status === "active" ? "suspended" : "active";
 
   // Save changes
   await user.save();
 
-  res.status(200).json({ message: "User account suspended successfully" });
+  res.status(200).json({
+    message: `User account ${
+      user.status === "active" ? "reactivated" : "suspended"
+    } successfully`,
+    newStatus: user.status,
+  });
 });
 
 // @desc    Admin gets a list of all users
@@ -88,7 +93,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 // @desc    Admin gets a single user's profile and their orders
 // @route   GET /api/admin/users/:id
 // @access  Private/Admin
-exports.getUserWithOrders = asyncHandler(async (req, res) => {
+exports.getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   // Find user by ID, excluding password
@@ -98,8 +103,10 @@ exports.getUserWithOrders = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // Fetch that user's orders
-  const orders = await Order.find({ user: id }).sort({ createdAt: -1 });
+  // Populate user's order details
+  const orders = await Order.find({ user: id })
+    .select("createdAt status totalAmount") // Limit fields to what's needed
+    .sort({ createdAt: -1 }); // Newest first
 
   res.status(200).json({
     user,

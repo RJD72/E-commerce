@@ -10,11 +10,14 @@ const path = require("path"); // Helps resolve file and directory paths
 const { updateUserSchema } = require("../../joiSchemas/authSchema"); // Joi validation schema for updating users
 const cloudinary = require("../../utils/cloudinary");
 
-// @desc    Update user profile
+// @desc    Update user profile including addresses
 // @route   PATCH /api/users/profile
 // @access  Private
 exports.updateUser = asyncHandler(async (req, res) => {
-  // Sanitize text input
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Sanitize base text inputs
   const updates = {
     firstName: xss(req.body.firstName || ""),
     lastName: xss(req.body.lastName || ""),
@@ -22,25 +25,35 @@ exports.updateUser = asyncHandler(async (req, res) => {
     phone: xss(req.body.phone || ""),
   };
 
-  const user = await User.findById(req.user._id);
-  if (!user) return res.status(404).json({ message: "User not found" });
+  // Sanitize and structure shipping address
+  updates.shippingAddress = {
+    street: xss(req.body.shippingStreet || ""),
+    city: xss(req.body.shippingCity || ""),
+    province: xss(req.body.shippingProvince || ""),
+    postalCode: xss(req.body.shippingPostalCode || ""),
+    country: xss(req.body.shippingCountry || "Canada"),
+  };
 
-  // Check if a new image was uploaded
+  // Sanitize and structure billing address
+  updates.billingAddress = {
+    street: xss(req.body.billingStreet || ""),
+    city: xss(req.body.billingCity || ""),
+    province: xss(req.body.billingProvince || ""),
+    postalCode: xss(req.body.billingPostalCode || ""),
+    country: xss(req.body.billingCountry || "Canada"),
+  };
+
+  // If an image is included, upload and update profileImage
   if (req.file) {
-    // If user already has a custom profile image, remove it from Cloudinary
     const prevImageUrl = user.profileImage;
     const defaultImage =
       "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
     if (prevImageUrl && !prevImageUrl.includes("pixabay")) {
-      // Extract public_id from the URL
       const publicId = prevImageUrl.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(`profile_pictures/${publicId}`);
     }
 
-    console.log(req.file);
-
-    // Upload new image to Cloudinary
     const uploadResult = await cloudinary.uploader.upload_stream(
       {
         folder: "profile_pictures",
@@ -48,16 +61,13 @@ exports.updateUser = asyncHandler(async (req, res) => {
       },
       async (error, result) => {
         if (error) {
-          console.error("Cloudinary upload error:", error);
           return res
             .status(500)
             .json({ message: "Image upload failed", error });
         }
 
-        // Save new image URL
         updates.profileImage = result.secure_url;
 
-        // Finalize update and respond
         const updatedUser = await User.findByIdAndUpdate(
           req.user._id,
           updates,
@@ -66,20 +76,19 @@ exports.updateUser = asyncHandler(async (req, res) => {
           }
         );
 
-        res.status(200).json({
+        return res.status(200).json({
           message: "User successfully updated!",
           user: updatedUser,
         });
       }
     );
 
-    // Pipe the buffer from multer into cloudinary's upload_stream
-    require("streamifier").createReadStream(req.file.buffer).pipe(uploadResult);
-
-    return; // wait for upload stream to finish before returning
+    return require("streamifier")
+      .createReadStream(req.file.buffer)
+      .pipe(uploadResult);
   }
 
-  // If no image uploaded, just update the text fields
+  // Standard update (no image)
   const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
     new: true,
   });
@@ -89,6 +98,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
     user: updatedUser,
   });
 });
+
 // @desc    Get logged-in user's profile + their order history
 // @route   GET /api/users/profile
 // @access  Private

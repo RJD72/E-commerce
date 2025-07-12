@@ -1,15 +1,31 @@
-import { Outlet } from "react-router-dom";
-
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { matchPath } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./redux/features/authSlice";
+import Footer from "./components/Footer";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
+  const hideLayoutRoutes = [
+    "/resend-verification",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password/:token",
+  ];
+
+  const shouldHideLayout = hideLayoutRoutes.some((path) =>
+    matchPath({ path, end: true }, location.pathname)
+  );
 
   // Local state to track whether we're still checking for a valid session
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     // This function checks if a valid refresh token exists in a secure cookie
@@ -39,14 +55,22 @@ const App = () => {
               user: data.user,
             })
           );
-        } else {
-          // No valid session - user is not logged in
-          console.log("No session found, User is unauthenticated");
         }
       } catch (error) {
         // Something went wrong (network error, invalid/expired refresh token, etc.)
         console.log("Session refresh failed:", error);
-        // You can optionally redirect the user to login here
+
+        // Only navigate to login if the current route is protected
+        const protectedRoutes = ["/profile", "/dashboard", "/admin", "/orders"];
+
+        const isProtected = protectedRoutes.some((path) => {
+          location.pathname.startsWith(path);
+        });
+
+        if (isProtected) {
+          // You can optionally redirect the user to login here
+          navigate("/login");
+        }
       } finally {
         // Hide the loading screen and render the app, regardless of outcome
         setLoading(false);
@@ -66,13 +90,21 @@ const App = () => {
   }, [dispatch]);
 
   // While waiting for session check to complete, show a loading screen
-  if (loading) return <div>Loading session...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center">
+        <div>Loading session...</div>
+      </div>
+    );
+
   return (
     <>
-      <Navbar />
+      <ToastContainer />
+      {!shouldHideLayout && <Navbar />}
       <main>
         <Outlet />
       </main>
+      {!shouldHideLayout && <Footer />}
     </>
   );
 };

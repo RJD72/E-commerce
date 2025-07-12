@@ -20,10 +20,10 @@ const BackButton = ({ fallback = "/" }) => {
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -20, opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-violet-600 hover:bg-gray-100 rounded-md transition-colors shadow-sm"
+      className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-white hover:bg-blue-900 rounded-md transition-colors shadow-sm"
     >
       <FaArrowLeft className="text-lg" />
       Back

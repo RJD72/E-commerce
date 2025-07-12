@@ -3,6 +3,7 @@ const { asyncHandler } = require("../../middleware/asyncHandler");
 const cloudinary = require("../../utils/cloudinary");
 const stream = require("stream");
 const validator = require("validator");
+const mongoose = require("mongoose");
 
 // @desc    Admin creates a new product with uploaded image or image URL
 // @route   POST /api/admin/products

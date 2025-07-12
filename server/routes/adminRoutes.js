@@ -10,9 +10,9 @@ const {
   getAllOrdersAdmin,
 } = require("../controllers/admin_management/admin_orderController");
 const {
-  deactivateUserById,
   getAllUsers,
-  getUserWithOrders,
+  getUserById,
+  toggleUserStatus,
 } = require("../controllers/admin_management/admin_userController");
 
 const {
@@ -50,12 +50,12 @@ router.patch(
 );
 
 router.get("/users", authenticate, authorizeAdmin, getAllUsers);
-router.get("/users/:id", authenticate, authorizeAdmin, getUserWithOrders);
+router.get("/users/:id", authenticate, authorizeAdmin, getUserById);
 router.patch(
   "/users/:id/deactivate",
   authenticate,
   authorizeAdmin,
-  deactivateUserById
+  toggleUserStatus
 );
 
 module.exports = router;

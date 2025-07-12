@@ -17,10 +17,13 @@ const authSlice = createSlice({
     logoutUser: (state) => {
       state.accessToken = null;
       state.user = null;
+      state.justLoggedOut = true;
     },
+    clearLogoutFlag: (state) => (state.justLoggedOut = false),
   },
 });
 
-export const { setCredentials, logoutUser } = authSlice.actions;
+export const { setCredentials, logoutUser, clearLogoutFlag } =
+  authSlice.actions;
 
 export default authSlice.reducer;

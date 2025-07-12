@@ -1,170 +1,271 @@
+/* eslint-disable no-unused-vars */
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useUpdateUserMutation } from "../../redux/api/userApiSlice";
+import { setCredentials } from "../../redux/features/authSlice";
+import BackButton from "../../components/BackButton";
+import FloatingInput from "../../components/FloatingInput";
+import { toast, ToastContainer } from "react-toastify";
+
 const Addresses = () => {
+  // --- Form State Variables for Shipping Address ---
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+
+  // --- Form State Variables for Billing Address ---
+  const [billingStreet, setBillingStreet] = useState("");
+  const [billingCity, setBillingCity] = useState("");
+  const [billingProvince, setBillingProvince] = useState("");
+  const [billingPostalCode, setBillingPostalCode] = useState("");
+  const [billingCountry, setBillingCountry] = useState("");
+
+  // Checkbox state for "same as shipping"
+  const [sameAsShipping, setSameAsShipping] = useState(false);
+
+  // Local validation error object (used to highlight empty fields)
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // Pull the user from the Redux store
+  const user = useSelector((state) => state.auth.user);
+
+  // Use RTK Query mutation for updating user
+  const [updateUser, { isLoading, error }] = useUpdateUserMutation();
+
+  // Set up dispatch for updating user state in Redux
+  const dispatch = useDispatch();
+
+  // --- On Mount: Preload form fields from user state ---
+  useEffect(() => {
+    if (user) {
+      setStreet(user.shippingAddress?.street || "");
+      setCity(user.shippingAddress?.city || "");
+      setProvince(user.shippingAddress?.province || "");
+      setPostalCode(user.shippingAddress?.postalCode || "");
+      setCountry(user.shippingAddress?.country || "");
+
+      setBillingStreet(user.billingAddress?.street || "");
+      setBillingCity(user.billingAddress?.city || "");
+      setBillingProvince(user.billingAddress?.province || "");
+      setBillingPostalCode(user.billingAddress?.postalCode || "");
+      setBillingCountry(user.billingAddress?.country || "");
+    }
+  }, [user]);
+
+  // --- When "same as shipping" is checked, sync billing fields ---
+  useEffect(() => {
+    if (sameAsShipping) {
+      setBillingStreet(street);
+      setBillingCity(city);
+      setBillingProvince(province);
+      setBillingPostalCode(postalCode);
+      setBillingCountry(country);
+    }
+  }, [sameAsShipping, street, city, province, postalCode, country]);
+
+  // --- Validate: Ensure all form fields are filled ---
+  const validate = () => {
+    const errs = {};
+
+    // Shipping address validation
+    if (!street.trim()) errs.street = "Street is required";
+    if (!city.trim()) errs.city = "City is required";
+    if (!province.trim()) errs.province = "Province is required";
+    if (!postalCode.trim()) errs.postalCode = "Postal code is required";
+    if (!country.trim()) errs.country = "Country is required";
+
+    // Billing address validation
+    if (!billingStreet.trim())
+      errs.billingStreet = "Billing street is required";
+    if (!billingCity.trim()) errs.billingCity = "Billing city is required";
+    if (!billingProvince.trim())
+      errs.billingProvince = "Billing province is required";
+    if (!billingPostalCode.trim())
+      errs.billingPostalCode = "Billing postal code is required";
+    if (!billingCountry.trim())
+      errs.billingCountry = "Billing country is required";
+
+    // Store error flags for each invalid field
+    setFieldErrors(errs);
+
+    // Return true only if there are no errors
+    return Object.keys(errs).length === 0;
+  };
+
+  // --- Handle form submission ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Abort if validation fails
+    if (!validate()) {
+      toast.error("Please fill in all required fields.", {
+        position: "top-center",
+        closeOnClick: true,
+      });
+      return;
+    }
+
+    // Prepare data to send to backend using FormData
+    const formData = new FormData();
+
+    // Add shipping address fields
+    formData.append("shippingStreet", street);
+    formData.append("shippingCity", city);
+    formData.append("shippingProvince", province);
+    formData.append("shippingPostalCode", postalCode);
+    formData.append("shippingCountry", country);
+
+    // Add billing address fields
+    formData.append("billingStreet", billingStreet);
+    formData.append("billingCity", billingCity);
+    formData.append("billingProvince", billingProvince);
+    formData.append("billingPostalCode", billingPostalCode);
+    formData.append("billingCountry", billingCountry);
+
+    try {
+      // Send the update request to the backend
+      const res = await updateUser(formData).unwrap();
+
+      // If the update is successful, update Redux and show success toast
+      if (res?.user) {
+        dispatch(setCredentials({ user: res.user }));
+        toast.success("Address updated successfully!");
+      }
+    } catch (err) {
+      // Show error toast if something fails
+      toast.error(err?.data?.message || "Failed to update address.");
+    }
+  };
+
+  // 🔴 Shared styles for error highlighting
+  const inputErrorClass = "border-red-500 ring-1 ring-red-300";
+
   return (
-    <section>
-      <div className="space-y-8 container m-auto divide-y divide-gray-200">
-        <div class="bg-gradient-to-r from-indigo-800 to-blue-900 min-h-screen flex items-center justify-center p-4">
-          <div class="font-std mb-10 w-full rounded-2xl bg-white p-10 font-normal leading-relaxed text-gray-900 shadow-xl">
-            <div class="flex flex-col">
-              <div class="flex flex-col md:flex-row justify-between mb-5 items-start">
-                <h2 class="mb-5 text-4xl font-bold text-blue-900">
-                  Update Profile
-                </h2>
-                <div class="text-center">
-                  <div>
-                    <img
-                      src="https://i.pravatar.cc/300"
-                      alt="Profile Picture"
-                      class="rounded-full w-32 h-32 mx-auto border-4 border-indigo-800 mb-4 transition-transform duration-300 hover:scale-105 ring ring-gray-300"
-                    />
-                    <input
-                      type="file"
-                      name="profile"
-                      id="upload_profile"
-                      hidden
-                      required
-                    />
+    <section className="flex justify-center items-center min-h-[calc(100vh-210px)] px-4">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <div className="w-full max-w-4xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.35)] rounded-[10px] p-[30px] box-border">
+        <BackButton fallback="/profile" />
+        <h2 className="text-center text-[28px] font-extrabold mb-[30px] font-sans text-blue-900">
+          Shipping & Billing Address
+        </h2>
 
-                    <label
-                      for="upload_profile"
-                      class="inline-flex items-center"
-                    >
-                      <svg
-                        data-slot="icon"
-                        class="w-5 h-5 text-blue-700"
-                        fill="none"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
-                        ></path>
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
-                        ></path>
-                      </svg>
-                    </label>
-                  </div>
-                  <button class="bg-indigo-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition-colors duration-300 ring ring-gray-300 hover:ring-indigo-300">
-                    Change Profile Picture
-                  </button>
-                </div>
-              </div>
-
-              <form class="space-y-4">
-                <div>
-                  <label
-                    for="name"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="John Doe"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="title"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="Software Developer"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="organization"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    id="organization"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="Estep Bilişim"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="email"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="john.doe@example.com"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="phone"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="+1 (555) 123-4567"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="location"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    id="location"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    value="San Francisco, CA"
-                  />
-                </div>
-
-                <div class="flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    class="px-4 py-2 bg-indigo-800 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          {/* Shipping */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-blue-700">
+              Shipping Address
+            </h3>
+            <div className="flex flex-col md:flex-row gap-4">
+              <FloatingInput
+                label="Street"
+                value={street}
+                onChange={setStreet}
+                error={!!fieldErrors.street}
+                helperText={fieldErrors.street}
+              />
+              <FloatingInput
+                label="City"
+                value={city}
+                onChange={setCity}
+                error={!!fieldErrors.city}
+                helperText={fieldErrors.city}
+              />
             </div>
+            <FloatingInput
+              label="Province"
+              value={province}
+              onChange={setProvince}
+              error={!!fieldErrors.province}
+              helperText={fieldErrors.province}
+            />
+            <FloatingInput
+              label="Postal Code"
+              value={postalCode}
+              onChange={setPostalCode}
+              error={!!fieldErrors.postalCode}
+              helperText={fieldErrors.postalCode}
+            />
+            <FloatingInput
+              label="Country"
+              value={country}
+              onChange={setCountry}
+              error={!!fieldErrors.country}
+              helperText={fieldErrors.country}
+            />
           </div>
-        </div>
+
+          {/* Billing */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-blue-700">Billing Address</h3>
+
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                className="rounded text-indigo-600 focus:ring-0"
+                checked={sameAsShipping}
+                onChange={() => setSameAsShipping(!sameAsShipping)}
+              />
+              Same as shipping address
+            </label>
+
+            <div className="flex flex-col md:flex-row gap-4">
+              <FloatingInput
+                label="Street"
+                value={billingStreet}
+                onChange={setBillingStreet}
+                error={!!fieldErrors.billingStreet}
+                helperText={fieldErrors.billingStreet}
+              />
+              <FloatingInput
+                label="City"
+                value={billingCity}
+                onChange={setBillingCity}
+                error={!!fieldErrors.billingCity}
+                helperText={fieldErrors.billingCity}
+              />
+            </div>
+            <FloatingInput
+              label="Province"
+              value={billingProvince}
+              onChange={setBillingProvince}
+              error={!!fieldErrors.billingProvince}
+              helperText={fieldErrors.billingProvince}
+            />
+            <FloatingInput
+              label="Postal Code"
+              value={billingPostalCode}
+              onChange={setBillingPostalCode}
+              error={!!fieldErrors.billingPostalCode}
+              helperText={fieldErrors.billingPostalCode}
+            />
+            <FloatingInput
+              label="Country"
+              value={billingCountry}
+              onChange={setBillingCountry}
+              error={!!fieldErrors.billingCountry}
+              helperText={fieldErrors.billingCountry}
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-center md:justify-end gap-3 pt-4">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-4 py-2 rounded-full text-white transition ${
+                isLoading
+                  ? "bg-indigo-400 cursor-not-allowed"
+                  : "bg-indigo-800 hover:bg-indigo-700"
+              }`}
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
       </div>
     </section>
   );
 };
+
 export default Addresses;

@@ -48,19 +48,19 @@ export const authApiSlice = apiSlice.injectEndpoints({
     }),
 
     resetPassword: builder.mutation({
-      query: (data) => ({
-        url: `${AUTH_URL}/reset-password`,
+      query: ({ token, password, confirmPassword }) => ({
+        url: `${AUTH_URL}/reset-password/${token}`,
         method: "POST",
-        body: data,
+        body: { password, confirmPassword },
       }),
       invalidatesTags: ["Auth"],
     }),
 
-    resetPasswordWithToken: builder.mutation({
-      query: ({ token, password }) => ({
-        url: `${AUTH_URL}/reset-password/${token}`,
+    resendVerification: builder.mutation({
+      query: ({ email }) => ({
+        url: `${AUTH_URL}/resend-verification`,
         method: "POST",
-        body: { password },
+        body: { email },
       }),
     }),
   }),
@@ -72,5 +72,5 @@ export const {
   useRegisterUserMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
-  useResetPasswordWithTokenMutation,
+  useResendVerificationMutation,
 } = authApiSlice;
