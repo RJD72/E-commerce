@@ -5,6 +5,7 @@ const {
   addReview,
   getProductReviews,
   deleteReview,
+  getFeaturedProducts,
 } = require("../controllers/product_management/productController");
 const {
   authenticate,
@@ -14,6 +15,7 @@ const {
 const router = require("express").Router();
 
 router.get("/", getAllProducts);
+router.get("/featured", getFeaturedProducts);
 router.get("/:id", getProductById);
 router.get("/search", searchProducts);
 router

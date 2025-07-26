@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./redux/features/authSlice";
+import { setSessionLoading } from "./redux/features/sessionSlice";
 import Footer from "./components/Footer";
 import { ToastContainer } from "react-toastify";
 
@@ -31,6 +32,7 @@ const App = () => {
     // This function checks if a valid refresh token exists in a secure cookie
     // and if so, requests a new access token + user info from the backend
     const refreshToken = async () => {
+      dispatch(setSessionLoading(true));
       try {
         // Send GET request to refresh endpoint
         // 'credentials: include' ensures cookies are sent (required for refresh tokens)
@@ -74,6 +76,7 @@ const App = () => {
       } finally {
         // Hide the loading screen and render the app, regardless of outcome
         setLoading(false);
+        dispatch(setSessionLoading(false));
       }
     };
 

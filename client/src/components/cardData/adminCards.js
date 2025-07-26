@@ -15,8 +15,8 @@ export const adminCards = [
     link: "orders",
   },
   {
-    title: "Wishlist",
+    title: "Categories",
     src: "https://media.istockphoto.com/id/173872898/photo/spiral-notebook-on-laptop-with-blank-wishlist.jpg?s=2048x2048&w=is&k=20&c=P4iKSWO0tNj2QeJDW5LTvRwMiU7Yvqysx3mPUygX43M=",
-    link: "wishlist",
+    link: "admin-categories",
   },
 ];

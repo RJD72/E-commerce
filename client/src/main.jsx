@@ -31,19 +31,30 @@ import AdminProductDetails from "./pages/admin/AdminProductDetails.jsx";
 import AdminAddProduct from "./pages/admin/AdminAddProduct.jsx";
 import Home from "./pages/Home.jsx";
 import Categories from "./pages/Categories.jsx";
+import CategoryProducts from "./pages/CategoryProducts.jsx";
+import ProductDetails from "./pages/ProductDetails.jsx";
+import AdminCategory from "./pages/admin/AdminCategory.jsx";
+import Cart from "./pages/Cart.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
+      {/* Public Routes */}
       <Route index element={<Home />} />
+      <Route path="/categories" element={<Categories />} />
+      <Route path="/:categoryId/products" element={<CategoryProducts />} />
+      <Route path="/product-details/:id" element={<ProductDetails />} />
+      <Route path="/cart" element={<Cart />} />
+
+      {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/resend-verification" element={<ResendVerificationPage />} />
       <Route path="/email-verified" element={<EmailVerified />} />
       <Route path="/forgot-password" element={<ForgotPasswordForm />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
-      <Route path="/categories" element={<Categories />} />
 
+      {/* Private Routes */}
       <Route element={<PrivateRoute />}>
         <Route path="/profile" element={<Profile />}>
           <Route path="addresses" element={<Addresses />} />
@@ -52,9 +63,12 @@ const router = createBrowserRouter(
         </Route>
       </Route>
 
+      {/* Admin Routes */}
       <Route element={<AdminRoute />}>
         <Route path="/admin-panel" element={<AdminPanel />}>
           <Route path="admin-users" element={<AdminUsers />} />
+          <Route path="admin-categories" element={<AdminCategory />} />
+
           <Route path="admin-users/details/:id" element={<AdminUserDetail />} />
           <Route path="admin-products" element={<AdminProducts />} />
           <Route
@@ -76,3 +90,12 @@ createRoot(document.getElementById("root")).render(
     <RouterProvider router={router} />
   </Provider>
 );
+
+// main.jsx (after React DOM renders)
+const preloader = document.getElementById("preloader");
+
+if (preloader) {
+  preloader.style.opacity = "0";
+  preloader.style.transition = "opacity 0.5s ease";
+  setTimeout(() => preloader.remove(), 500);
+}

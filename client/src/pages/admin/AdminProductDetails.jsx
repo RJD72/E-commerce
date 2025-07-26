@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useGetProductByIdQuery } from "../../redux/api/productApiSlice";
 import {
   useUpdateProductMutation,
   useDeleteProductMutation,
 } from "../../redux/api/adminApiSlice";
+import { useGetCategoriesQuery } from "../../redux/api/categoriesApiSlice";
 import FloatingInput from "../../components/FloatingInput";
 import BackButton from "../../components/BackButton";
 import { toast } from "react-toastify";
@@ -14,9 +15,12 @@ import ConfirmModal from "../../components/ConfirmModal";
 const AdminProductDetails = () => {
   const { id } = useParams();
   const { data, isLoading, error } = useGetProductByIdQuery(id);
+  const { data: categories, isLoading: categoriesLoading } =
+    useGetCategoriesQuery();
   const [updateProduct] = useUpdateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const navigate = useNavigate();
 
   // Controlled form state
   const [formData, setFormData] = useState({
@@ -80,7 +84,7 @@ const AdminProductDetails = () => {
     e.preventDefault();
     try {
       const res = await updateProduct({ id, ...formData }).unwrap();
-      console.log(res);
+
       toast.success("Product updated successfully.");
     } catch (error) {
       toast.error(error?.data?.message || "Update failed");
@@ -92,6 +96,7 @@ const AdminProductDetails = () => {
     try {
       const res = await deleteProduct(id).unwrap();
       toast.success(res.message);
+      navigate("admin-products");
     } catch (error) {
       toast.error(error.message || "Failed to delete");
     }
@@ -103,7 +108,7 @@ const AdminProductDetails = () => {
   return (
     <section className="flex justify-center px-4">
       <div className="w-full max-w-4xl bg-white shadow-md rounded p-6">
-        <BackButton fallback="/admin-panel/admin-products" />
+        <BackButton fallback="admin-panel" />
         <h2 className="text-2xl font-bold my-6">Product Details</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,12 +138,31 @@ const AdminProductDetails = () => {
             value={formData.price}
             onChange={handleChange}
           />
-          <FloatingInput
-            name="category"
-            label="Category"
-            value={formData.category}
-            onChange={handleChange}
-          />
+          <div className="relative mt-4">
+            {categoriesLoading ? (
+              <div>Loading categories...</div>
+            ) : (
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-warm-taupe"
+                required
+              >
+                <option value="">Select a category</option>
+                {categories?.map((category) => (
+                  <option
+                    key={category._id}
+                    value={category._id}
+                    className="capitalize"
+                  >
+                    {category.name.charAt(0).toUpperCase() +
+                      category.name.slice(1)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <FloatingInput
             name="stock"
             label="Stock"

@@ -82,7 +82,7 @@ const Login = () => {
               type="email"
               label={"Email"}
               value={email}
-              onChange={setEmail}
+              onChange={(e) => setEmail(e.target.value)}
               error={!!fieldErrors.email}
               helperText={fieldErrors.email}
             />
@@ -90,7 +90,7 @@ const Login = () => {
               type="password"
               label={"Password"}
               value={password}
-              onChange={setPassword}
+              onChange={(e) => setPassword(e.target.value)}
               error={!!fieldErrors.password}
               helperText={fieldErrors.password}
             />

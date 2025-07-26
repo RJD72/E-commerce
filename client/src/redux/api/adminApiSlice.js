@@ -44,6 +44,7 @@ export const adminApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: formData,
       }),
+      invalidatesTags: ["Products"],
     }),
   }),
 });

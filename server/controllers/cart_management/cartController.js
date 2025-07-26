@@ -156,14 +156,48 @@ exports.updateCartItem = asyncHandler(async (req, res) => {
 // @desc    Remove a product from the user's cart
 // @route   DELETE /api/cart/:productId
 // @access  Private
-exports.removeFromCart = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const productId = req.params.productId;
+// exports.removeFromCart = asyncHandler(async (req, res) => {
+//   const userId = req.user._id;
+//   const productId = req.params.productId;
 
-  // Validate presence of productId
-  if (!productId) {
-    return res.status(400).json({ message: "Product ID is required" });
-  }
+//   // Validate presence of productId
+//   if (!productId) {
+//     return res.status(400).json({ message: "Product ID is required" });
+//   }
+
+//   // Find the user
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
+
+//   // Check if the product is actually in the user's cart
+//   const cartItemExists = user.cart.some(
+//     (item) => item.productId.toString() === productId
+//   );
+
+//   if (!cartItemExists) {
+//     return res.status(404).json({ message: "Product not found in cart" });
+//   }
+
+//   // Remove the item by filtering it out
+//   user.cart = user.cart.filter(
+//     (item) => item.productId.toString() !== productId
+//   );
+
+//   // Save the updated user document
+//   await user.save();
+
+//   // Return updated cart with populated product details
+//   const updatedUser = await User.findById(userId).populate("cart.productId");
+//   res.status(200).json(updatedUser.cart);
+// });
+
+// @desc    Remove all items from user's cart
+// @route   DELETE /api/cart
+// @access  Private
+exports.clearUserCart = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
 
   // Find the user
   const user = await User.findById(userId);
@@ -171,24 +205,10 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // Check if the product is actually in the user's cart
-  const cartItemExists = user.cart.some(
-    (item) => item.productId.toString() === productId
-  );
+  // Clear the cart
+  user.cart = [];
 
-  if (!cartItemExists) {
-    return res.status(404).json({ message: "Product not found in cart" });
-  }
-
-  // Remove the item by filtering it out
-  user.cart = user.cart.filter(
-    (item) => item.productId.toString() !== productId
-  );
-
-  // Save the updated user document
   await user.save();
 
-  // Return updated cart with populated product details
-  const updatedUser = await User.findById(userId).populate("cart.productId");
-  res.status(200).json(updatedUser.cart);
+  res.status(200).json({ message: "Cart has been emptied", cart: user.cart });
 });

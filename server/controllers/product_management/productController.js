@@ -16,11 +16,23 @@ exports.getAllProducts = asyncHandler(async (req, res) => {
   try {
     // --- STEP 1: Optional query parameters for pagination, sorting, etc. ---
     const page = parseInt(req.query.page) || 1; // default to page 1
-    const limit = parseInt(req.query.limit) || 12; // default to 12 products per page
+    const limit = parseInt(req.query.limit) || 10; // default to 10 products per page
     const sortBy = req.query.sortBy || "createdAt"; // default sort field
     const order = req.query.order === "asc" ? 1 : -1; // ascending or descending
 
     const skip = (page - 1) * limit;
+
+    const categoryFilter = req.query.category;
+
+    let query = {};
+
+    if (categoryFilter) {
+      query.category = categoryFilter;
+    }
+
+    if (req.query.isFeatured != undefined) {
+      query.isFeatured = req.query.isFeatured === "true";
+    }
 
     // --- STEP 2: Fetch products from the database ---
     const products = await Product.find({})
@@ -73,6 +85,27 @@ exports.getProductById = asyncHandler(async (req, res) => {
     return res.status(500).json({
       message: "Failed to retrieve product.",
     });
+  }
+});
+
+// @desc    Get 4 random featured products
+// @route   GET /api/products/featured
+// @access  Public
+exports.getFeaturedProducts = asyncHandler(async (req, res) => {
+  try {
+    const featuredProducts = await Product.aggregate([
+      { $match: { isFeatured: true } },
+      { $sample: { size: 4 } }, // Randomly select 4 docs
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: featuredProducts.length,
+      data: featuredProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching featured products:", error.stack);
+    res.status(500).json({ message: "Failed to fetch featured products." });
   }
 });
 

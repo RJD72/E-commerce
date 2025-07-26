@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
-import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const backdropVariants = {
   visible: { opacity: 1 },
@@ -11,12 +12,29 @@ const modalVariants = {
   visible: {
     opacity: 1,
     scale: 1,
-
     transition: { duration: 0.25, ease: "easeOut" },
   },
 };
 
-const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
+const EditCategoryModal = ({
+  isOpen,
+  initialValue = "",
+  title = "Edit Category",
+  onCancel,
+  onConfirm,
+}) => {
+  const [inputValue, setInputValue] = useState(initialValue);
+
+  useEffect(() => {
+    setInputValue(initialValue); // Reset input when modal opens with a new value
+  }, [initialValue, isOpen]);
+
+  const handleSubmit = () => {
+    if (inputValue.trim()) {
+      onConfirm(inputValue.trim());
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -32,7 +50,13 @@ const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
             variants={modalVariants}
           >
             <h2 className="text-lg font-bold mb-3 text-gray-800">{title}</h2>
-            <p className="text-sm text-gray-600 mb-6">{message}</p>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Enter new category name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-full mb-6 focus:outline-none focus:ring-2 focus:ring-warm-taupe"
+            />
             <div className="flex justify-end gap-3">
               <button
                 onClick={onCancel}
@@ -41,10 +65,10 @@ const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
                 Cancel
               </button>
               <button
-                onClick={onConfirm}
-                className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
+                onClick={handleSubmit}
+                className="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition"
               >
-                Confirm
+                Update
               </button>
             </div>
           </motion.div>
@@ -54,4 +78,4 @@ const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
   );
 };
 
-export default ConfirmModal;
+export default EditCategoryModal;

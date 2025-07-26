@@ -1,11 +1,25 @@
 import { Link } from "react-router-dom";
 import Store from "../assets/store.jpg";
 import MotionButton from "../components/MotionButton";
-import FeaturedCard from "../components/FeaturedCard.jsx";
-import CategoryCard from "../components/CategoryCard.jsx";
+import { useSelector } from "react-redux";
 import { FaArrowRight } from "react-icons/fa6";
+import { useGetCategoriesQuery } from "../redux/api/categoriesApiSlice.js";
+import { useGetFeaturedProductsQuery } from "../redux/api/productApiSlice.js";
+import ProductCard from "../components/ProductCard.jsx";
+import CategoryCard from "../components/CategoryCard.jsx";
 
 const Home = () => {
+  const { data: featuredCategories, isLoading } = useGetCategoriesQuery({
+    limit: 4,
+  });
+  const { data: featuredProducts, isLoading: productLoading } =
+    useGetFeaturedProductsQuery();
+  const { isLoading: isSessionLoading } = useSelector((state) => state.session);
+
+  if (isLoading || productLoading || isSessionLoading) {
+    return <div>Loading homepage...</div>;
+  }
+
   return (
     <>
       <section className="bg-off-white-linen">
@@ -31,10 +45,22 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <h3 className="font-bold text-2xl mb-6">Featured Products</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4   gap-8">
-            <FeaturedCard />
-            <FeaturedCard />
-            <FeaturedCard />
-            <FeaturedCard />
+            {productLoading ? (
+              <div>Loading...</div>
+            ) : (
+              featuredProducts?.map((item) => (
+                <ProductCard
+                  id={item._id}
+                  key={item._id}
+                  image={item.images}
+                  name={item.name}
+                  price={item.price}
+                  brand={item.brand}
+                  rating={item.rating}
+                  numReviews={item.numReviews}
+                />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -44,14 +70,24 @@ const Home = () => {
             Shop By Categories
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4   gap-8">
-            <CategoryCard />
-            <CategoryCard />
-            <CategoryCard />
-            <CategoryCard />
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : !isLoading && featuredCategories?.length > 0 ? (
+              featuredCategories.map((category) => (
+                <Link to={`/${category._id}/products`} key={category._id}>
+                  <CategoryCard
+                    category={category.name}
+                    imageUrl={category.image}
+                  />
+                </Link>
+              ))
+            ) : (
+              <div>No categories available</div>
+            )}
           </div>
           <div className="flex justify-center md:justify-end mt-6">
             <Link to={"/categories"}>
-              <MotionButton text={`All Products`} icon={<FaArrowRight />} />
+              <MotionButton text={`All Categories`} icon={<FaArrowRight />} />
             </Link>
           </div>
         </div>

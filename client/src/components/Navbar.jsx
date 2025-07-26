@@ -7,16 +7,31 @@ import { logoutUser } from "../redux/features/authSlice";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "react-toastify";
+import { useGetUserCartQuery } from "../redux/api/cartApiSlice";
+import { resetCartRefetch } from "../redux/features/cartSlice";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropDownOpen, setDropDownOpen] = useState(false);
   const user = useSelector((state) => state.auth.user);
+  const { data, refetch } = useGetUserCartQuery(undefined, {
+    skip: !user,
+  });
+  const cartItemCount =
+    data?.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const dispatch = useDispatch();
   const [logout] = useLogoutUserMutation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const location = useLocation();
+  const shouldRefetch = useSelector((state) => state.cart.shouldRefetch);
+
+  useEffect(() => {
+    if (shouldRefetch) {
+      refetch();
+      dispatch(resetCartRefetch());
+    }
+  }, [shouldRefetch, refetch, dispatch]);
 
   useEffect(() => {
     setDropDownOpen(false);
@@ -184,12 +199,19 @@ const Navbar = () => {
               id="util_data"
               data="{{ json_encode($util_data) }}"
             ></span>
-            <a
+            <Link
               className=" py-1.5 px-3 m-1 text-center hidden lg:inline-block "
-              href="https://tailwindflex.com/login"
+              to={"/cart"}
             >
-              <AiOutlineShoppingCart size={24} />
-            </a>
+              <div className="relative">
+                <AiOutlineShoppingCart size={24} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+            </Link>
           </div>
         </div>
       </nav>

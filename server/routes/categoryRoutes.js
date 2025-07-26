@@ -5,6 +5,7 @@ const {
   createCategory,
   updateCategory,
   deleteCategory,
+  getProductsByCategory,
 } = require("../controllers/category_management/categoryControllers");
 const {
   authenticate,
@@ -20,5 +21,7 @@ router
   .get(getCategoryById)
   .patch(authenticate, authorizeAdmin, updateCategory)
   .delete(authenticate, authorizeAdmin, deleteCategory);
+
+router.get("/:id/products", getProductsByCategory);
 
 module.exports = router;

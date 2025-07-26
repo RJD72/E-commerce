@@ -8,10 +8,4 @@
   --color-burnt-mustard: oklch(0.68 0.17 75); /* Accent: brown-orange/mustard */
   --color-denim-blue: oklch(0.56 0.09 250); /* Accent: denim shirt blue */
   --color-charcoal-black: oklch(0.18 0 0); /* Near black for dark UI areas */
-
-  /* Hover backgrounds */
-  --hover-bg-midnight-navy: var(--color-midnight-navy);
-  --hover-bg-slate-gray: var(--color-slate-gray);
-  --hover-bg-burnt-mustard: var(--color-burnt-mustard);
-  --hover-bg-denim-blue: var(--color-denim-blue);
 }

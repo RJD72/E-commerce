@@ -16,7 +16,7 @@ const MotionButton = ({ text, icon }) => {
           rest: { x: "-100%", y: "100%" }, // Starts at bottom-left
           hover: { x: "0%", y: "0%" }, // Moves to top-right
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
         style={{
           backgroundColor: "var(--color-midnight-navy)",
         }}
@@ -33,7 +33,7 @@ const MotionButton = ({ text, icon }) => {
             color: "#ffffff", // animate to white
           },
         }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
       >
         {text}
         {icon}
