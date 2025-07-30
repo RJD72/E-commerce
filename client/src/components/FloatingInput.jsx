@@ -26,7 +26,11 @@ const FloatingInput = ({
         name={name}
         id={inputId}
         value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          if (typeof onChange === "function") {
+            onChange(e.target.value);
+          }
+        }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         autoComplete="off"
