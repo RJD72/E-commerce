@@ -4,6 +4,7 @@ const {
   createPaymentIntent,
   stripeWebhook,
   refundPayment,
+  createStripeCheckoutSession,
 } = require("../controllers/payment_management/paymentController");
 const {
   authorizeAdmin,
@@ -12,7 +13,11 @@ const {
 
 // POST /api/payments/create-intent
 // This endpoint creates a Stripe PaymentIntent and returns a clientSecret
-router.post("/create-intent", authenticate, createPaymentIntent);
+router.post(
+  "/create-checkout-session",
+  authenticate,
+  createStripeCheckoutSession
+);
 router.post("/webhook", stripeWebhook);
 router.post("/refund", authenticate, authorizeAdmin, refundPayment);
 

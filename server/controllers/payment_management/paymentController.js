@@ -1,36 +1,112 @@
 // Import the Stripe library and your async error handler middleware
-const Stripe = require("stripe");
 // Initialize Stripe with your secret API key from environment variables
 // This creates an instance of the Stripe client used to interact with the Stripe API
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const User = require("../../models/userModels");
+const Order = require("../../models/orderModel");
+
 const { asyncHandler } = require("../../middleware/asyncHandler");
 
 // @desc    Create Stripe payment intent
 // @route   POST /api/payments/create-intent
 // @access  Private (requires user to be authenticated)
-exports.createPaymentIntent = asyncHandler(async (req, res) => {
-  // Destructure the amount to charge from the request body
-  // Stripe expects the amount in the smallest currency unit (e.g., cents for CAD/USD)
-  const { amount } = req.body;
+// exports.createPaymentIntent = asyncHandler(async (req, res) => {
+//   // Destructure the amount to charge from the request body
+//   // Stripe expects the amount in the smallest currency unit (e.g., cents for CAD/USD)
+//   const { amount } = req.body;
 
-  // If no amount is provided, return an error response
-  if (!amount) {
-    return res.status(400).json({ message: "Amount is required" });
+//   // If no amount is provided, return an error response
+//   if (!amount) {
+//     return res.status(400).json({ message: "Amount is required" });
+//   }
+
+//   // Create a new PaymentIntent on Stripe
+//   // A PaymentIntent represents your intent to collect payment and is used to securely handle the payment process
+//   const paymentIntent = await stripe.paymentIntents.create({
+//     amount, // Total charge amount in cents (e.g., 1999 = $19.99)
+//     currency: "cad", // Currency to charge in, e.g., CAD for Canadian dollars
+//     payment_method_types: ["card"], // Limit accepted methods to cards (Stripe default)
+//   });
+
+//   // Respond to the frontend with the client secret
+//   // The frontend will use this client secret to complete the payment with Stripe.js
+//   res.status(200).json({
+//     clientSecret: paymentIntent.client_secret,
+//   });
+// });
+
+/**
+ * @desc    Create Stripe Checkout Session
+ * @route   POST /api/payments/create-checkout-session
+ * @access  Private
+ */
+exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
+  const { cartItems, customerEmail, metadata = {} } = req.body;
+
+  // Validate input
+  if (!cartItems || !Array.isArray(cartItems)) {
+    return res.status(400).json({ error: "Cart items are required" });
   }
 
-  // Create a new PaymentIntent on Stripe
-  // A PaymentIntent represents your intent to collect payment and is used to securely handle the payment process
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount, // Total charge amount in cents (e.g., 1999 = $19.99)
-    currency: "cad", // Currency to charge in, e.g., CAD for Canadian dollars
-    payment_method_types: ["card"], // Limit accepted methods to cards (Stripe default)
-  });
+  try {
+    // Prepare line items
+    const lineItems = cartItems.map((item) => {
+      if (
+        !item.productId ||
+        !item.productId.name ||
+        !item.productId.price ||
+        !item.quantity
+      ) {
+        throw new Error(`Invalid product data: ${JSON.stringify(item)}`);
+      }
 
-  // Respond to the frontend with the client secret
-  // The frontend will use this client secret to complete the payment with Stripe.js
-  res.status(200).json({
-    clientSecret: paymentIntent.client_secret,
-  });
+      return {
+        price_data: {
+          currency: "cad",
+          product_data: {
+            name: item.productId.name,
+            description: item.productId.description || undefined,
+            images: item.productId.images
+              ? [item.productId.images[0]]
+              : undefined,
+          },
+          unit_amount: Math.round(item.productId.price * 100), // Convert to cents
+        },
+        quantity: item.quantity,
+      };
+    });
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      mode: "payment",
+      customer_email: customerEmail || undefined,
+      metadata: {
+        ...metadata,
+        environment: process.env.NODE_ENV || "development",
+      },
+      success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/cart`,
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA"],
+      },
+      automatic_tax: {
+        enabled: true,
+      },
+    });
+
+    res.json({
+      url: session.url,
+      sessionId: session.id,
+    });
+  } catch (error) {
+    console.error("Stripe Checkout Error:", error);
+    res.status(500).json({
+      error: "Failed to create checkout session",
+      details: error.message,
+    });
+  }
 });
 
 /**

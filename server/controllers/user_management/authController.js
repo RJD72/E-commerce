@@ -135,8 +135,8 @@ exports.loginUser = asyncHandler(async (req, res) => {
   // Set the refresh token in a secure HTTP-only cookie
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true, // Can't be accessed by client-side JS (prevents XSS)
-    secure: process.env.NODE_ENV === "production", // Send over HTTPS in production
-    sameSite: "Strict", // Prevents CSRF (doesn't send cookie cross-origin)
+    secure: true, // Send over HTTPS in production
+    sameSite: "none", // Prevents CSRF (doesn't send cookie cross-origin)
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 
