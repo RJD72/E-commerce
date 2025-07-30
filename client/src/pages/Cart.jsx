@@ -78,6 +78,7 @@ const Cart = () => {
 
   const handleCheckout = async (e) => {
     e.preventDefault();
+    console.log("Clicked Proceed to Checkout");
     try {
       const res = createCheckoutSession({ cartItems: data }).unwrap();
       if (res?.url) {
