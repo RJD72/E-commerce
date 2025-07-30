@@ -6,6 +6,7 @@ export const paymentApiSlice = apiSlice.injectEndpoints({
     createCheckoutSession: builder.mutation({
       query: (cartItems) => ({
         url: `${PAYMENTS_URL}/create-checkout-session`,
+        method: "POST",
         body: cartItems,
       }),
     }),
