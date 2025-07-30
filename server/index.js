@@ -6,6 +6,10 @@ const bodyParser = require("body-parser");
 
 require("dotenv").config();
 
+const {
+  stripeWebhook,
+} = require("./controllers/payment_management/paymentController");
+
 // Routes
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -24,15 +28,19 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Stripe webhook requires raw body
-app.use("/api/payments/webhook", bodyParser.raw({ type: "application/json" }));
+app.use(
+  "/api/payments/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  stripeWebhook
+);
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://marketplacefront.netlify.app/",
+    origin: "https://marketplacefront.netlify.app",
     credentials: true, //✅ Needed for cookies/authorization headers
   })
 );
@@ -46,6 +54,10 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/category", categoryRoutes);
+
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
