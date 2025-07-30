@@ -85,8 +85,14 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
       mode: "payment",
       customer_email: customerEmail || undefined,
       metadata: {
+        environment: process.env.NODE_ENV || "development",
         userId: req.user?._id.toString() || "guest",
-        cart: JSON.stringify(cartItems),
+        cart: JSON.stringify(
+          cartItems.map((item) => ({
+            productId: item.productId._id || item.productId,
+            quantity: item.quantity,
+          }))
+        ),
       },
       success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.CLIENT_URL}/cart`,
