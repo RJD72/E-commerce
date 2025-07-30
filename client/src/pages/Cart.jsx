@@ -4,6 +4,7 @@ import {
   useClearCartMutation,
   useUpdateCartItemMutation,
 } from "../redux/api/cartApiSlice";
+import { useCreateCheckoutSessionMutation } from "../redux/api/paymentApiSlice";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
@@ -13,6 +14,7 @@ const Cart = () => {
   const { data = [], isLoading, refetch } = useGetUserCartQuery();
   const [updateCart] = useUpdateCartItemMutation();
   const [clearCart] = useClearCartMutation();
+  const [createCheckoutSession] = useCreateCheckoutSessionMutation();
 
   const controls = useAnimation();
   const [removingItemId, setRemovingItemId] = useState(null);
@@ -74,9 +76,16 @@ const Cart = () => {
     }
   };
 
-  const handleCheckout = () => {
-    toast.info("Redirecting to checkout...");
-    // navigate("/checkout");
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    try {
+      const res = createCheckoutSession(data).unwrap();
+      if (res?.url) {
+        window.location.href = res.url; // ⬅️ redirect to Stripe Checkout
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   if (isLoading) return <p>Loading cart...</p>;
