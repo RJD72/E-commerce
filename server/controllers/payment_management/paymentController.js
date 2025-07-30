@@ -41,7 +41,7 @@ const { asyncHandler } = require("../../middleware/asyncHandler");
  * @access  Private
  */
 exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
-  const { cartItems, customerEmail, metadata = {} } = req.body;
+  const { cartItems } = req.body;
 
   // Validate input
   if (!cartItems || !Array.isArray(cartItems)) {
@@ -81,7 +81,7 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      customer_email: customerEmail || undefined,
+      customer_email: req.user.email,
       metadata: {
         environment: process.env.NODE_ENV || "development",
         userId: req.user?._id.toString() || "guest",
