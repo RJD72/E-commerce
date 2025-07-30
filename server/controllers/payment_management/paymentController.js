@@ -151,6 +151,9 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
 
   const data = event.data.object;
 
+  console.log(event);
+  console.log(data);
+
   switch (event.type) {
     case "checkout.session.completed": {
       const { userId, cart, shipping } = data.metadata || {};
