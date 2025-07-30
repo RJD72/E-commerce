@@ -37,9 +37,9 @@ const App = () => {
         // Send GET request to refresh endpoint
         // 'credentials: include' ensures cookies are sent (required for refresh tokens)
         const res = await fetch(
-          "http://localhost:5000/api/auth/refresh-token",
+          "https://e-commerce-zk07.onrender.com/api/auth/refresh-token",
           {
-            method: "GET",
+            method: "POST",
             credentials: "include",
           }
         );

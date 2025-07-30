@@ -1,4 +1,4 @@
-export const BASE_URL = "http://localhost:5000/api";
+export const BASE_URL = "https://e-commerce-zk07.onrender.com/api";
 export const AUTH_URL = `${BASE_URL}/auth`;
 export const USER_URL = `${BASE_URL}/user`;
 export const PRODUCT_URL = `${BASE_URL}/products`;

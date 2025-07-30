@@ -32,7 +32,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://marketplacefront.netlify.app/",
     credentials: true, //✅ Needed for cookies/authorization headers
   })
 );
