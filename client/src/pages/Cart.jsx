@@ -79,7 +79,7 @@ const Cart = () => {
   const handleCheckout = async (e) => {
     e.preventDefault();
     try {
-      const res = createCheckoutSession(data).unwrap();
+      const res = createCheckoutSession({ cartItems: data }).unwrap();
       if (res?.url) {
         window.location.href = res.url; // ⬅️ redirect to Stripe Checkout
       }
