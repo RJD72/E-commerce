@@ -78,10 +78,10 @@ const Cart = () => {
 
   const handleCheckout = async (e) => {
     e.preventDefault();
-    console.log("Clicked Proceed to Checkout");
+
     try {
       const res = createCheckoutSession({ cartItems: data }).unwrap();
-      console.log("Stripe session", res);
+
       if (res?.url) {
         window.location.href = res.url; // ⬅️ redirect to Stripe Checkout
       } else {

@@ -35,6 +35,8 @@ import CategoryProducts from "./pages/CategoryProducts.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import AdminCategory from "./pages/admin/AdminCategory.jsx";
 import Cart from "./pages/Cart.jsx";
+import SuccessPage from "./pages/SuccessPage.jsx";
+import CanceledPage from "./pages/CanceledPage.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -45,6 +47,8 @@ const router = createBrowserRouter(
       <Route path="/:categoryId/products" element={<CategoryProducts />} />
       <Route path="/product-details/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/success" element={<SuccessPage />} />
+      <Route path="/canceled" element={<CanceledPage />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />

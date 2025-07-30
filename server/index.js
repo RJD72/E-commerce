@@ -40,7 +40,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "https://marketplacefront.netlify.app",
+    origin: [
+      "https://marketplacefront.netlify.app",
+      "https://checkout.stripe.com",
+    ],
     credentials: true, //✅ Needed for cookies/authorization headers
   })
 );

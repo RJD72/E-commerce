@@ -96,9 +96,15 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
       },
     });
 
+    if (!session.url) {
+      console.error("Stripe session has no URL", session);
+      return res
+        .status(500)
+        .json({ error: "Stripe did not return a checkout URL" });
+    }
+
     res.json({
       url: session.url,
-      sessionId: session.id,
     });
   } catch (error) {
     console.error("Stripe Checkout Error:", error);
