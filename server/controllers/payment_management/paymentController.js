@@ -41,8 +41,6 @@ const { asyncHandler } = require("../../middleware/asyncHandler");
  * @access  Private
  */
 exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
-  console.log("🧪 req.user in create session:", req.user);
-  console.log("🧪 req.headers.authorization:", req.headers.authorization);
   const { cartItems, customerEmail, metadata = {} } = req.body;
 
   // Validate input
