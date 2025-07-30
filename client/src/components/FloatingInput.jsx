@@ -25,7 +25,7 @@ const FloatingInput = ({
         type={type}
         name={name}
         id={inputId}
-        value={value}
+        value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
