@@ -91,6 +91,7 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
             quantity: item.quantity,
           }))
         ),
+        shipping: JSON.stringify(req.user.shippingAddress),
       },
       success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.CLIENT_URL}/cart`,
