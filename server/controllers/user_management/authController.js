@@ -132,20 +132,13 @@ exports.loginUser = asyncHandler(async (req, res) => {
   // Generate long-lived refresh token
   const refreshToken = generateRefreshToken(user._id);
 
-  // Set the refresh token in a secure HTTP-only cookie
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true, // Can't be accessed by client-side JS (prevents XSS)
-    secure: true, // Send over HTTPS in production
-    sameSite: "none", // Prevents CSRF (doesn't send cookie cross-origin)
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  });
-
   const userObj = user.toObject();
   delete userObj.password;
 
   // Send access token and basic user info in response
   res.status(200).json({
     accessToken,
+    refreshToken,
     user: userObj,
   });
 });
@@ -170,7 +163,7 @@ exports.logoutUser = asyncHandler(async (req, res) => {
  */
 exports.refreshToken = asyncHandler(async (req, res) => {
   // Get refresh token from cookies
-  const token = req.cookies.refreshToken;
+  const { refreshToken: token } = req.body;
 
   if (!token) {
     return res.status(401).json({ message: "No token provided" });

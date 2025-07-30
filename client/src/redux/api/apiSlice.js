@@ -9,12 +9,11 @@ export const apiSlice = createApi({
   // which is a wrapper around the standard fetch API with some conveniences
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL, // The root URL that all your endpoints will be based on
-    credentials: "include", // Include cookies with every request (needed for sessions or CSRF tokens)
 
     // This function allows you to dynamically attach headers to every request
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
       // Access the Redux state and pull out the access token from the auth slice
-      const token = getState().auth.accessToken;
+      const token = localStorage.getItem("accessToken");
 
       // If a token exists, attach it as a Bearer token to the Authorization header
       if (token) {

@@ -44,6 +44,9 @@ const Login = () => {
       // 1. Call the login endpoint with credentials
       const res = await loginUser({ email, password }).unwrap();
 
+      localStorage.setItem("accessToken", res.accessToken);
+      localStorage.setItem("refreshToken", res.refreshToken);
+
       //2. Dispatch to authSlice to store token and user in Redux
       dispatch(
         setCredentials({ accessToken: res.accessToken, user: res.user })

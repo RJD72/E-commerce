@@ -34,13 +34,17 @@ const App = () => {
     const refreshToken = async () => {
       dispatch(setSessionLoading(true));
       try {
+        const token = localStorage.getItem("refreshToken");
         // Send GET request to refresh endpoint
         // 'credentials: include' ensures cookies are sent (required for refresh tokens)
         const res = await fetch(
           "https://e-commerce-zk07.onrender.com/api/auth/refresh-token",
           {
             method: "POST",
-            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ refreshToken: token }),
           }
         );
 

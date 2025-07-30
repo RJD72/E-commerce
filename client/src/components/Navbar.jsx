@@ -53,6 +53,9 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
+      // Remove tokens from localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       const res = await logout().unwrap();
       dispatch(logoutUser());
       toast.success("Successfully logged out", {
