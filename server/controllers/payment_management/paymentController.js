@@ -85,6 +85,8 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
       metadata: {
         ...metadata,
         environment: process.env.NODE_ENV || "development",
+        userId: req.user._id,
+        cart: JSON.stringify(cartItems),
       },
       success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.CLIENT_URL}/cart`,
@@ -128,91 +130,112 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
  * 5. Acknowledge receipt to Stripe
  */
 exports.stripeWebhook = asyncHandler(async (req, res) => {
-  // 1. Extract Stripe signature from headers
   const sig = req.headers["stripe-signature"];
-  let event;
 
+  let event;
   try {
-    // 2. Verify the event is genuinely from Stripe
     event = stripe.webhooks.constructEvent(
-      req.body, // Raw body buffer (thanks to express.raw())
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("⚠️ Webhook signature verification failed:", err.message);
+    console.error("❌ Webhook signature verification failed.", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // 3. Handle specific event types
+  const data = event.data.object;
+
   switch (event.type) {
-    case "payment_intent.succeeded":
-      const paymentIntent = event.data.object;
+    case "checkout.session.completed": {
+      const { userId, cart, shipping } = data.metadata || {};
+      if (!userId || !cart || !shipping) break;
 
-      // 3a. Check if we've already processed this event (idempotency)
-      const existingOrder = await Order.findOne({
-        paymentIntentId: paymentIntent.id,
-      });
-
-      if (existingOrder && existingOrder.status === "paid") {
-        console.log(`Order ${existingOrder._id} already processed`);
-        return res.status(200).json({ received: true });
-      }
-
-      // 3b. Update order status in database
+      let cartItems, shippingAddress;
       try {
-        const updatedOrder = await Order.findOneAndUpdate(
-          { paymentIntentId: paymentIntent.id },
-          {
-            status: "paid",
-            paymentDetails: {
-              amount: paymentIntent.amount / 100, // Convert cents to dollars
-              currency: paymentIntent.currency,
-              paymentMethod: paymentIntent.payment_method_types[0],
-            },
-          },
-          { new: true }
-        );
+        cartItems = JSON.parse(cart);
+        shippingAddress = JSON.parse(shipping);
+      } catch {
+        console.error("❌ Invalid cart or shipping metadata");
+        break;
+      }
 
-        if (!updatedOrder) {
-          console.error(
-            "❌ Order not found for PaymentIntent:",
-            paymentIntent.id
-          );
-          // In production, consider a retry queue or admin alert
-        } else {
-          console.log(`💰 Order ${updatedOrder._id} marked as paid`);
-          // 3c. Trigger fulfillment (email, shipping, etc.)
-          // sendOrderConfirmationEmail(updatedOrder);
+      try {
+        const existingOrder = await Order.findOne({ sessionId: data.id });
+        if (existingOrder) break;
+
+        const items = cartItems.map((item) => ({
+          product: item._id,
+          quantity: item.quantity,
+        }));
+
+        const newOrder = await Order.create({
+          user: userId,
+          sessionId: data.id,
+          items,
+          shippingAddress,
+          totalAmount: data.amount_total / 100,
+          status: "paid",
+          paymentMethod: "stripe",
+          isPaid: true,
+          paidAt: new Date(),
+        });
+
+        await User.findByIdAndUpdate(userId, { cart: [] });
+
+        const emailHTML = `
+          <h2>Thank you for your purchase!</h2>
+          <p>Order ID: ${newOrder._id}</p>
+          <p>Total: $${newOrder.totalAmount.toFixed(2)}</p>
+          <p>We'll notify you when it ships.</p>
+        `;
+
+        await sendEmail(data.customer_email, "Order Confirmation", emailHTML);
+
+        console.log(`✅ Order created and email sent: ${newOrder._id}`);
+      } catch (err) {
+        console.error("❌ Failed to create order:", err);
+      }
+
+      break;
+    }
+
+    case "payment_intent.succeeded": {
+      console.log("✅ Payment succeeded:", data.id);
+      break;
+    }
+
+    case "payment_intent.payment_failed": {
+      console.warn("⚠️ Payment failed:", data.id);
+      break;
+    }
+
+    case "charge.refunded": {
+      console.log("💸 Charge refunded:", data.id);
+      try {
+        const order = await Order.findOne({
+          paymentIntentId: data.payment_intent,
+        });
+        if (order) {
+          order.status = "refunded";
+          await order.save();
+          console.log(`✅ Order ${order._id} marked as refunded`);
         }
-      } catch (dbError) {
-        console.error("❌ Database update failed:", dbError);
-        // In production: Queue for retry or notify admin
+      } catch (err) {
+        console.error("❌ Refund handling failed:", err);
       }
       break;
+    }
 
-    case "payment_intent.payment_failed":
-      const failedIntent = event.data.object;
-      console.error(
-        "❌ Payment failed:",
-        failedIntent.last_payment_error?.message
-      );
-
-      // Optional: Notify user or admin
-      // sendPaymentFailedNotification(failedIntent.metadata.userId);
+    case "checkout.session.expired": {
+      console.log("⌛ Checkout session expired:", data.id);
       break;
-
-    // Handle other relevant events
-    case "charge.refunded":
-      console.log("🔙 Refund processed:", event.data.object.id);
-      // Update order status to "refunded"
-      break;
+    }
 
     default:
-      console.log(`⚡ Unhandled event type: ${event.type}`);
+      console.log(`📩 Unhandled event type: ${event.type}`);
   }
 
-  // 4. Acknowledge receipt to Stripe
   res.status(200).json({ received: true });
 });
 
