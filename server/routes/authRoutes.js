@@ -20,6 +20,6 @@ router.post("/logout", authenticate, logoutUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.post("/resend-verification", resendVerificationEmail);
-router.get("/refresh-token", refreshToken);
+router.post("/refresh-token", refreshToken);
 
 module.exports = router;
