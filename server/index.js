@@ -43,6 +43,7 @@ app.use(
     origin: [
       "https://marketplacefront.netlify.app",
       "https://checkout.stripe.com",
+      "http://localhost:5173",
     ],
     credentials: true, //✅ Needed for cookies/authorization headers
   })

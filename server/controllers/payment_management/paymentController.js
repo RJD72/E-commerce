@@ -6,6 +6,9 @@ const User = require("../../models/userModels");
 const Order = require("../../models/orderModel");
 const sendEmail = require("../../utils/email");
 const { asyncHandler } = require("../../middleware/asyncHandler");
+const generateReceipt = require("../../utils/generateReceipt");
+const fs = require("fs");
+const path = require("path");
 
 // @desc    Create Stripe payment intent
 // @route   POST /api/payments/create-intent
@@ -155,9 +158,8 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       const metadata = data.metadata || {};
       const { userId, cart } = metadata;
 
-      // Get shipping details from Stripe's collected information
+      // Get shipping details
       const shippingDetails = data.collected_information?.shipping_details;
-
       if (!shippingDetails) {
         console.error("❌ No shipping details collected");
         break;
@@ -171,31 +173,15 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         country: shippingDetails.address.country,
       };
 
-      // Validate required fields
-      if (
-        !shippingAddress.street ||
-        !shippingAddress.city ||
-        !shippingAddress.province ||
-        !shippingAddress.postalCode
-      ) {
-        console.error(
-          "❌ Missing required shipping address fields:",
-          shippingAddress
-        );
-        break;
-      }
-
       try {
-        // Parse cart items
+        // Parse cart items and create order
         const cartItems = JSON.parse(cart);
-
-        // Avoid duplicate order creation
-        const existing = await Order.findOne({ stripeSessionId: data.id });
+        const existing = await Order.findOne({ sessionId: data.id });
         if (existing) break;
 
         const newOrder = await Order.create({
           user: userId,
-          stripeSessionId: data.id,
+          sessionId: data.id,
           items: cartItems.map((item) => ({
             product: item.productId,
             quantity: item.quantity,
@@ -208,21 +194,59 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
           paidAt: new Date(),
         });
 
-        // Clear the user's cart
+        // Clear user's cart
         await User.findByIdAndUpdate(userId, { cart: [] });
 
-        // Email receipt
+        // Generate receipt PDF
+        const receiptsDir = path.join(__dirname, "../receipts");
+        if (!fs.existsSync(receiptsDir)) {
+          fs.mkdirSync(receiptsDir, { recursive: true });
+        }
+
+        const receiptPath = path.join(receiptsDir, `${newOrder._id}.pdf`);
+
+        // Generate and wait for receipt to be created
+        await new Promise((resolve, reject) => {
+          generateReceipt(newOrder, receiptPath);
+          const watcher = fs.watch(receiptPath, (eventType) => {
+            if (eventType === "change") {
+              watcher.close();
+              resolve();
+            }
+          });
+        });
+
+        // Email with receipt attachment
         const html = `
       <h2>Thank you for your order!</h2>
       <p>Order ID: ${newOrder._id}</p>
       <p>Total Paid: $${newOrder.totalAmount.toFixed(2)}</p>
-      <p>We'll notify you when your order ships.</p>
+      <p>Your receipt is attached to this email.</p>
     `;
-        await sendEmail(data.customer_email, "Order Confirmation", html);
 
-        console.log(`✅ Order created + email sent for session: ${data.id}`);
+        await sendEmail({
+          to: data.customer_email,
+          subject: "Order Confirmation - Receipt Attached",
+          html,
+          attachments: [
+            {
+              filename: `receipt-${newOrder._id}.pdf`,
+              path: receiptPath,
+              contentType: "application/pdf",
+            },
+          ],
+        });
+
+        // Clean up after 30 seconds (give time for email to send)
+        setTimeout(() => {
+          fs.unlink(receiptPath, (err) => {
+            if (err) console.error("Error deleting receipt:", err);
+          });
+        }, 30000);
+
+        console.log(`✅ Order processed and receipt sent for ${data.id}`);
       } catch (err) {
-        console.error("❌ Order creation or email failed:", err);
+        console.error("❌ Order processing failed:", err);
       }
       break;
     }
