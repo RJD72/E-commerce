@@ -82,7 +82,6 @@ const Login = () => {
             onSubmit={handleSubmit}
           >
             <FloatingInput
-              type="email"
               label="Email"
               value={email}
               onChange={setEmail}
@@ -90,7 +89,6 @@ const Login = () => {
               helperText={fieldErrors.email}
             />
             <FloatingInput
-              type="password"
               label="Password"
               value={password}
               onChange={setPassword}
