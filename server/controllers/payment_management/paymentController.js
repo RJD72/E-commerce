@@ -136,11 +136,11 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
  */
 exports.stripeWebhook = asyncHandler(async (req, res) => {
   const sig = req.headers["stripe-signature"];
-
   let event;
+
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawBody, // Use rawBody as required by Stripe
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -151,36 +151,37 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
 
   const data = event.data.object;
 
-  console.log("Event data", event);
-  console.log("Data data", data);
-
   switch (event.type) {
     case "checkout.session.completed": {
-      const { userId, cart, shipping } = data.metadata || {};
-      if (!userId || !cart || !shipping) break;
+      const metadata = data.metadata || {};
+      const { userId, cart, shipping } = metadata;
+
+      if (!userId || !cart || !shipping) {
+        console.error("❌ Missing metadata in checkout.session.completed");
+        break;
+      }
 
       let cartItems, shippingAddress;
       try {
         cartItems = JSON.parse(cart);
         shippingAddress = JSON.parse(shipping);
-      } catch {
-        console.error("❌ Invalid cart or shipping metadata");
+      } catch (e) {
+        console.error("❌ Failed to parse metadata JSON:", e);
         break;
       }
 
       try {
-        const existingOrder = await Order.findOne({ sessionId: data.id });
-        if (existingOrder) break;
-
-        const items = cartItems.map((item) => ({
-          product: item._id,
-          quantity: item.quantity,
-        }));
+        // Avoid duplicate order creation
+        const existing = await Order.findOne({ sessionId: data.id });
+        if (existing) break;
 
         const newOrder = await Order.create({
           user: userId,
           sessionId: data.id,
-          items,
+          items: cartItems.map((item) => ({
+            product: item.productId,
+            quantity: item.quantity,
+          })),
           shippingAddress,
           totalAmount: data.amount_total / 100,
           status: "paid",
@@ -189,34 +190,33 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
           paidAt: new Date(),
         });
 
+        // Clear the user's cart
         await User.findByIdAndUpdate(userId, { cart: [] });
 
-        const emailHTML = `
-          <h2>Thank you for your purchase!</h2>
+        // Email receipt
+        const html = `
+          <h2>Thank you for your order!</h2>
           <p>Order ID: ${newOrder._id}</p>
-          <p>Total: $${newOrder.totalAmount.toFixed(2)}</p>
-          <p>We'll notify you when it ships.</p>
+          <p>Total Paid: $${newOrder.totalAmount.toFixed(2)}</p>
+          <p>We'll notify you when your order ships.</p>
         `;
+        await sendEmail(data.customer_email, "Order Confirmation", html);
 
-        await sendEmail(data.customer_email, "Order Confirmation", emailHTML);
-
-        console.log(`✅ Order created and email sent: ${newOrder._id}`);
+        console.log(`✅ Order created + email sent for session: ${data.id}`);
       } catch (err) {
-        console.error("❌ Failed to create order:", err);
+        console.error("❌ Order creation or email failed:", err);
       }
 
       break;
     }
 
-    case "payment_intent.succeeded": {
+    case "payment_intent.succeeded":
       console.log("✅ Payment succeeded:", data.id);
       break;
-    }
 
-    case "payment_intent.payment_failed": {
+    case "payment_intent.payment_failed":
       console.warn("⚠️ Payment failed:", data.id);
       break;
-    }
 
     case "charge.refunded": {
       console.log("💸 Charge refunded:", data.id);
@@ -235,10 +235,9 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       break;
     }
 
-    case "checkout.session.expired": {
+    case "checkout.session.expired":
       console.log("⌛ Checkout session expired:", data.id);
       break;
-    }
 
     default:
       console.log(`📩 Unhandled event type: ${event.type}`);
