@@ -18,11 +18,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const [loginUser] = useLoginUserMutation();
 
-  useEffect(() => {
-    console.log("Password state:", password);
-    console.log("Email state:", email);
-  }, [password, email]);
-
   const validate = () => {
     const errs = {};
 
@@ -46,6 +41,8 @@ const Login = () => {
     }
 
     try {
+      console.log("🔐 Login Payload:", { email, password });
+
       // 1. Call the login endpoint with credentials
       const res = await loginUser({ email, password }).unwrap();
 
