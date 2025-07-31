@@ -17,13 +17,16 @@ exports.updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Sanitize base text inputs
-  const updates = {
-    firstName: xss(req.body.firstName || ""),
-    lastName: xss(req.body.lastName || ""),
-    email: xss(req.body.email || ""),
-    phone: xss(req.body.phone || ""),
-  };
+  if ("email" in req.body && !req.body.email.trim()) {
+    return res.status(400).json({ message: "Email cannot be empty" });
+  }
+
+  const updates = {};
+
+  if (req.body.firstName) updates.firstName = xss(req.body.firstName);
+  if (req.body.lastName) updates.lastName = xss(req.body.lastName);
+  if (req.body.email) updates.email = xss(req.body.email);
+  if (req.body.phone) updates.phone = xss(req.body.phone);
 
   // Sanitize and structure shipping address
   updates.shippingAddress = {
