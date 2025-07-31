@@ -83,17 +83,17 @@ const Login = () => {
           >
             <FloatingInput
               type="email"
-              label={"Email"}
+              label="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={setEmail}
               error={!!fieldErrors.email}
               helperText={fieldErrors.email}
             />
             <FloatingInput
               type="password"
-              label={"Password"}
+              label="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               error={!!fieldErrors.password}
               helperText={fieldErrors.password}
             />

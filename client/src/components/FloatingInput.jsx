@@ -22,7 +22,7 @@ const FloatingInput = ({
   return (
     <div className="relative w-full font-[Segoe UI]">
       <input
-        type={type}
+        type={type || "text"}
         name={name}
         id={inputId}
         value={value || ""}
