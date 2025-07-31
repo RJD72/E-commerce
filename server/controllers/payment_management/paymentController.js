@@ -135,8 +135,7 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
  * 5. Acknowledge receipt to Stripe
  */
 exports.stripeWebhook = asyncHandler(async (req, res) => {
-  console.log("Webhook received - headers:", req.headers);
-  console.log("Webhook received - body length:", req.body?.length);
+  console.log("Data.collected_information", data.collected_information);
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -160,7 +159,7 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       let shippingAddress = {};
 
       // Get shipping details from Stripe's shipping object if available
-      if (data.shipping_details) {
+      if (data.data.collected_information.shipping_details) {
         shippingAddress = {
           street: data.collected_information.shipping_details.address.line1,
           city: data.collected_information.shipping_details.address.city,
