@@ -197,26 +197,36 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         // Clear user's cart
         await User.findByIdAndUpdate(userId, { cart: [] });
 
-        // Generate receipt PDF
-        const receiptsDir = path.join(__dirname, "../receipts");
-        if (!fs.existsSync(receiptsDir)) {
-          fs.mkdirSync(receiptsDir, { recursive: true });
-        }
+        // Generate PDF in memory (no file system needed)
+        const pdfBuffer = await new Promise((resolve, reject) => {
+          const doc = new PDFDocument();
+          const chunks = [];
 
-        const receiptPath = path.join(receiptsDir, `${newOrder._id}.pdf`);
+          doc.on("data", chunks.push.bind(chunks));
+          doc.on("end", () => resolve(Buffer.concat(chunks)));
+          doc.on("error", reject);
 
-        // Generate and wait for receipt to be created
-        await new Promise((resolve, reject) => {
-          generateReceipt(newOrder, receiptPath);
-          const watcher = fs.watch(receiptPath, (eventType) => {
-            if (eventType === "change") {
-              watcher.close();
-              resolve();
-            }
+          // Generate PDF content
+          doc.fontSize(20).text("Order Receipt", { align: "center" });
+          doc.moveDown();
+          doc.fontSize(12).text(`Order ID: ${newOrder._id}`);
+          doc.text(`Date: ${new Date(newOrder.createdAt).toLocaleString()}`);
+          doc.text(`Total: $${newOrder.totalAmount.toFixed(2)}`);
+          doc.text(`Payment Status: ${newOrder.status}`);
+          doc.moveDown();
+          doc.text("Items:");
+          newOrder.items.forEach((item, index) => {
+            doc.text(
+              `${index + 1}. Product ID: ${item.product} | Quantity: ${
+                item.quantity
+              }`
+            );
           });
+
+          doc.end();
         });
 
-        // Email with receipt attachment
+        // Email with in-memory PDF attachment
         const html = `
       <h2>Thank you for your order!</h2>
       <p>Order ID: ${newOrder._id}</p>
@@ -224,25 +234,18 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       <p>Your receipt is attached to this email.</p>
     `;
 
-        await sendEmail({
-          to: data.customer_email,
-          subject: "Order Confirmation - Receipt Attached",
+        await sendEmail(
+          data.customer_email,
+          "Order Confirmation - Receipt Attached",
           html,
-          attachments: [
+          [
             {
               filename: `receipt-${newOrder._id}.pdf`,
-              path: receiptPath,
+              content: pdfBuffer, // Use the in-memory buffer
               contentType: "application/pdf",
             },
-          ],
-        });
-
-        // Clean up after 30 seconds (give time for email to send)
-        setTimeout(() => {
-          fs.unlink(receiptPath, (err) => {
-            if (err) console.error("Error deleting receipt:", err);
-          });
-        }, 30000);
+          ]
+        );
 
         console.log(`✅ Order processed and receipt sent for ${data.id}`);
       } catch (err) {
