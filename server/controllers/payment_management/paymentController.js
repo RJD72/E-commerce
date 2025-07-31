@@ -162,11 +162,12 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       // Get shipping details from Stripe's shipping object if available
       if (data.shipping_details) {
         shippingAddress = {
-          street: data.shipping_details.address.line1,
-          city: data.shipping_details.address.city,
-          province: data.shipping_details.address.state,
-          postalCode: data.shipping_details.address.postal_code,
-          country: data.shipping_details.address.country,
+          street: data.collected_information.shipping_details.address.line1,
+          city: data.collected_information.shipping_details.address.city,
+          province: data.collected_information.shipping_details.address.state,
+          postalCode:
+            data.collected_information.shipping_details.address.postal_code,
+          country: data.collected_information.shipping_details.address.country,
         };
       } else {
         // Fallback to metadata if shipping_details isn't available
