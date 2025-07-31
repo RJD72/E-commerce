@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/connectDB");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 
 require("dotenv").config();
 
@@ -29,7 +30,7 @@ connectDB();
 // Stripe webhook requires raw body
 app.post(
   "/api/payments/webhook",
-  express.raw({ type: "application/json" }),
+  bodyParser.raw({ type: "application/json" }),
   stripeWebhook
 );
 
