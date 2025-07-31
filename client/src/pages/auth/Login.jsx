@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Clothes from "./../../assets/clothes.jpg";
 import { useDispatch } from "react-redux";
@@ -17,6 +17,11 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loginUser] = useLoginUserMutation();
+
+  useEffect(() => {
+    console.log("Password state:", password);
+    console.log("Email state:", email);
+  }, [password, email]);
 
   const validate = () => {
     const errs = {};
