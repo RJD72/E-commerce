@@ -151,8 +151,8 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
 
   const data = event.data.object;
 
-  console.log(event);
-  console.log(data);
+  console.log("Event data", event);
+  console.log("Data data", data);
 
   switch (event.type) {
     case "checkout.session.completed": {
