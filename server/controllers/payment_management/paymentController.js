@@ -6,9 +6,7 @@ const User = require("../../models/userModels");
 const Order = require("../../models/orderModel");
 const sendEmail = require("../../utils/email");
 const { asyncHandler } = require("../../middleware/asyncHandler");
-const generateReceipt = require("../../utils/generateReceipt");
-const fs = require("fs");
-const path = require("path");
+const PDFDocument = require("pdfkit");
 
 // @desc    Create Stripe payment intent
 // @route   POST /api/payments/create-intent
