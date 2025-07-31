@@ -156,21 +156,51 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
   switch (event.type) {
     case "checkout.session.completed": {
       const metadata = data.metadata || {};
-      const { userId, cart, shipping } = metadata;
+      const { userId, cart } = metadata;
+      let shippingAddress = {};
 
-      if (!userId || !cart || !shipping) {
+      // Get shipping details from Stripe's shipping object if available
+      if (data.shipping_details) {
+        shippingAddress = {
+          street: data.shipping_details.address.line1,
+          city: data.shipping_details.address.city,
+          province: data.shipping_details.address.state,
+          postalCode: data.shipping_details.address.postal_code,
+          country: data.shipping_details.address.country,
+        };
+      } else {
+        // Fallback to metadata if shipping_details isn't available
+        try {
+          shippingAddress = JSON.parse(metadata.shipping || "{}");
+        } catch (e) {
+          console.error("❌ Failed to parse shipping metadata:", e);
+        }
+      }
+
+      // Validate required fields
+      if (
+        !shippingAddress.street ||
+        !shippingAddress.city ||
+        !shippingAddress.province ||
+        !shippingAddress.postalCode
+      ) {
+        console.error("❌ Missing required shipping address fields");
+        break;
+      }
+
+      if (!userId || !cart) {
         console.error("❌ Missing metadata in checkout.session.completed");
         break;
       }
 
-      let cartItems, shippingAddress;
-      try {
-        cartItems = JSON.parse(cart);
-        shippingAddress = JSON.parse(shipping);
-      } catch (e) {
-        console.error("❌ Failed to parse metadata JSON:", e);
-        break;
-      }
+      // let cartItems, shippingAddress;
+      // try {
+      //   cartItems = JSON.parse(cart);
+      //   shippingAddress = JSON.parse(shipping);
+      // } catch (e) {
+      //   console.error("❌ Failed to parse metadata JSON:", e);
+      //   break;
+      // }
 
       try {
         // Avoid duplicate order creation
