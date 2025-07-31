@@ -91,7 +91,6 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
             quantity: item.quantity,
           }))
         ),
-        shipping: JSON.stringify(req.user.shippingAddress),
       },
       success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.CLIENT_URL}/cart`,
@@ -191,12 +190,12 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         const cartItems = JSON.parse(cart);
 
         // Avoid duplicate order creation
-        const existing = await Order.findOne({ sessionId: data.id });
+        const existing = await Order.findOne({ stripeSessionId: data.id });
         if (existing) break;
 
         const newOrder = await Order.create({
           user: userId,
-          sessionId: data.id,
+          stripeSessionId: data.id,
           items: cartItems.map((item) => ({
             product: item.productId,
             quantity: item.quantity,

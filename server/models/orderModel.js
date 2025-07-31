@@ -25,7 +25,7 @@ const orderSchema = new mongoose.Schema({
   isPaid: { type: Boolean, default: false },
   paidAt: { type: Date },
   deliveredAt: { type: Date },
-  sessionId: { type: String },
+  stripeSessionId: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

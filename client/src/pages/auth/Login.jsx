@@ -41,8 +41,6 @@ const Login = () => {
     }
 
     try {
-      console.log("🔐 Login Payload:", { email, password });
-
       // 1. Call the login endpoint with credentials
       const res = await loginUser({ email, password }).unwrap();
 

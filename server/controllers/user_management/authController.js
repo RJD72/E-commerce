@@ -147,12 +147,6 @@ exports.loginUser = asyncHandler(async (req, res) => {
  * Logs out the user by clearing the refresh token cookie.
  */
 exports.logoutUser = asyncHandler(async (req, res) => {
-  // Clear the cookie by setting its expiration to the past
-  res.cookie("refreshToken", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-
   // Send success response
   res.status(200).json({ message: "Logged out successfully" });
 });
