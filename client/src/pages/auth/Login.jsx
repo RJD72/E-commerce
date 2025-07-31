@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Clothes from "./../../assets/clothes.jpg";
 import { useDispatch } from "react-redux";
@@ -84,6 +84,7 @@ const Login = () => {
             onSubmit={handleSubmit}
           >
             <FloatingInput
+              type="email"
               label="Email"
               value={email}
               onChange={setEmail}
@@ -91,6 +92,7 @@ const Login = () => {
               helperText={fieldErrors.email}
             />
             <FloatingInput
+              type="password"
               label="Password"
               value={password}
               onChange={setPassword}

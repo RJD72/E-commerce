@@ -14,10 +14,10 @@ export const authApiSlice = apiSlice.injectEndpoints({
     loginUser: builder.mutation({
       // The `query` function specifies how to make the request.
       // It receives `data`, which is the payload passed in when calling the hook (e.g., { email, password }).
-      query: (data) => ({
+      query: ({ email, password }) => ({
         url: `${AUTH_URL}/login`, // Construct the full API endpoint
         method: "POST", // HTTP method
-        body: data, // The data sent in the request body (e.g., login credentials)
+        body: { email, password }, // The data sent in the request body (e.g., login credentials)
       }),
       invalidatesTags: ["Auth"],
     }),
