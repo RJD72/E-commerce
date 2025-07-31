@@ -176,12 +176,12 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
       try {
         // Parse cart items and create order
         const cartItems = JSON.parse(cart);
-        const existing = await Order.findOne({ sessionId: data.id });
+        const existing = await Order.findOne({ stripeSessionId: data.id });
         if (existing) break;
 
         const newOrder = await Order.create({
           user: userId,
-          sessionId: data.id,
+          stripeSessionId: data.id,
           items: cartItems.map((item) => ({
             product: item.productId,
             quantity: item.quantity,
