@@ -135,12 +135,14 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
  * 5. Acknowledge receipt to Stripe
  */
 exports.stripeWebhook = asyncHandler(async (req, res) => {
+  console.log("Webhook received - headers:", req.headers);
+  console.log("Webhook received - body length:", req.body?.length);
   const sig = req.headers["stripe-signature"];
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(
-      req.rawBody, // Use rawBody as required by Stripe
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
