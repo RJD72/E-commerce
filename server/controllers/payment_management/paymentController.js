@@ -135,7 +135,6 @@ exports.createStripeCheckoutSession = asyncHandler(async (req, res) => {
  * 5. Acknowledge receipt to Stripe
  */
 exports.stripeWebhook = asyncHandler(async (req, res) => {
-  console.log("Data.collected_information", data.collected_information);
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -156,26 +155,22 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
     case "checkout.session.completed": {
       const metadata = data.metadata || {};
       const { userId, cart } = metadata;
-      let shippingAddress = {};
 
-      // Get shipping details from Stripe's shipping object if available
-      if (data.data.collected_information.shipping_details) {
-        shippingAddress = {
-          street: data.collected_information.shipping_details.address.line1,
-          city: data.collected_information.shipping_details.address.city,
-          province: data.collected_information.shipping_details.address.state,
-          postalCode:
-            data.collected_information.shipping_details.address.postal_code,
-          country: data.collected_information.shipping_details.address.country,
-        };
-      } else {
-        // Fallback to metadata if shipping_details isn't available
-        try {
-          shippingAddress = JSON.parse(metadata.shipping || "{}");
-        } catch (e) {
-          console.error("❌ Failed to parse shipping metadata:", e);
-        }
+      // Get shipping details from Stripe's collected information
+      const shippingDetails = data.collected_information?.shipping_details;
+
+      if (!shippingDetails) {
+        console.error("❌ No shipping details collected");
+        break;
       }
+
+      const shippingAddress = {
+        street: shippingDetails.address.line1,
+        city: shippingDetails.address.city,
+        province: shippingDetails.address.state,
+        postalCode: shippingDetails.address.postal_code,
+        country: shippingDetails.address.country,
+      };
 
       // Validate required fields
       if (
@@ -184,25 +179,17 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         !shippingAddress.province ||
         !shippingAddress.postalCode
       ) {
-        console.error("❌ Missing required shipping address fields");
+        console.error(
+          "❌ Missing required shipping address fields:",
+          shippingAddress
+        );
         break;
       }
-
-      if (!userId || !cart) {
-        console.error("❌ Missing metadata in checkout.session.completed");
-        break;
-      }
-
-      // let cartItems, shippingAddress;
-      // try {
-      //   cartItems = JSON.parse(cart);
-      //   shippingAddress = JSON.parse(shipping);
-      // } catch (e) {
-      //   console.error("❌ Failed to parse metadata JSON:", e);
-      //   break;
-      // }
 
       try {
+        // Parse cart items
+        const cartItems = JSON.parse(cart);
+
         // Avoid duplicate order creation
         const existing = await Order.findOne({ sessionId: data.id });
         if (existing) break;
@@ -227,18 +214,17 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
 
         // Email receipt
         const html = `
-          <h2>Thank you for your order!</h2>
-          <p>Order ID: ${newOrder._id}</p>
-          <p>Total Paid: $${newOrder.totalAmount.toFixed(2)}</p>
-          <p>We'll notify you when your order ships.</p>
-        `;
+      <h2>Thank you for your order!</h2>
+      <p>Order ID: ${newOrder._id}</p>
+      <p>Total Paid: $${newOrder.totalAmount.toFixed(2)}</p>
+      <p>We'll notify you when your order ships.</p>
+    `;
         await sendEmail(data.customer_email, "Order Confirmation", html);
 
         console.log(`✅ Order created + email sent for session: ${data.id}`);
       } catch (err) {
         console.error("❌ Order creation or email failed:", err);
       }
-
       break;
     }
 
