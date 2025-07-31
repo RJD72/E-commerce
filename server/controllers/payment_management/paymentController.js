@@ -4,7 +4,7 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../../models/userModels");
 const Order = require("../../models/orderModel");
-
+const sendEmail = require("../../utils/email");
 const { asyncHandler } = require("../../middleware/asyncHandler");
 
 // @desc    Create Stripe payment intent
