@@ -11,9 +11,9 @@ export const apiSlice = createApi({
     baseUrl: BASE_URL, // The root URL that all your endpoints will be based on
 
     // This function allows you to dynamically attach headers to every request
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers, { getState }) => {
       // Access the Redux state and pull out the access token from the auth slice
-      const token = localStorage.getItem("accessToken");
+      const token = getState().auth.accessToken;
 
       // If a token exists, attach it as a Bearer token to the Authorization header
       if (token) {

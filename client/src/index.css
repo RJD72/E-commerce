@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@plugin "daisyui" {
+  themes: light --default;
+}
+
 @theme {
   --color-midnight-navy: #2c3e50; /* Deep blue/navy from jackets */
   --color-slate-gray: #7f8c8d; /* Neutral gray from flooring */

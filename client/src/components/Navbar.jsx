@@ -7,12 +7,17 @@ import { logoutUser } from "../redux/features/authSlice";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "react-toastify";
-import { useGetUserCartQuery } from "../redux/api/cartApiSlice";
+import {
+  cartApiSlice,
+  useClearCartMutation,
+  useGetUserCartQuery,
+} from "../redux/api/cartApiSlice";
 import { resetCartRefetch } from "../redux/features/cartSlice";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropDownOpen, setDropDownOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const user = useSelector((state) => state.auth.user);
   const { data, refetch } = useGetUserCartQuery(undefined, {
     skip: !user,
@@ -21,10 +26,19 @@ const Navbar = () => {
     data?.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const dispatch = useDispatch();
   const [logout] = useLogoutUserMutation();
+  const [clearCart] = useClearCartMutation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const location = useLocation();
   const shouldRefetch = useSelector((state) => state.cart.shouldRefetch);
+  const { pathname } = useLocation();
+
+  const tabs = [
+    { label: "Home", to: "/" },
+    { label: "Contact", to: "/contact" },
+    { label: "About", to: "/about" },
+    { label: "Privacy", to: "/privacy" },
+  ];
 
   useEffect(() => {
     if (shouldRefetch) {
@@ -53,18 +67,43 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      // Remove tokens from localStorage
+      // ✅ Step 1: Clear the cart on the server **before** killing the session
+      await clearCart().unwrap();
+
+      // ✅ Step 2: Invalidate the backend session
+      await logout().unwrap(); // hit backend to invalidate session first
+
+      // ✅ Step 3: Remove local auth tokens
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      const res = await logout().unwrap();
+
+      // ✅ Step 4: Clear Redux auth state and RTK Query cache
       dispatch(logoutUser());
+
+      // Optional: Clear RTK cache
+      dispatch(cartApiSlice.util.resetApiState());
+
+      // ✅ Step 5: Redirect + success toast
       toast.success("Successfully logged out", {
         position: "top-center",
         closeOnClick: true,
       });
+
       navigate("/", { state: { fromLogout: true } });
     } catch (error) {
-      console.log("Logout failed:", error.message);
+      console.error("Logout failed:", error.message);
+    }
+  };
+
+  // Navbar.jsx - update the handleSearch function
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const trimmedKeyword = searchKeyword.trim();
+    if (trimmedKeyword) {
+      // You can add additional filters here if needed
+      // searchParams.append('category', 'electronics');
+      console.log("Navigating with keyword:", trimmedKeyword); // Debug
+      navigate(`/search?keyword=${encodeURIComponent(trimmedKeyword)}`);
     }
   };
 
@@ -102,32 +141,39 @@ const Navbar = () => {
         <ul className="hidden absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 lg:mx-auto lg:flex lg:items-center lg:w-auto lg:space-x-6">
           <li>
             <div className=" relative mx-auto text-gray-600">
-              <input
-                className="border border-gray-300 placeholder-current h-10 px-5 pr-16  rounded-full text-sm focus:outline-none  "
-                type="search"
-                name="search"
-                placeholder="Search"
-              />
-
-              <button
-                type="submit"
-                className="absolute right-0 top-0 mt-3 mr-4"
+              <form
+                onSubmit={handleSearch}
+                className="relative mx-auto text-gray-600"
               >
-                <svg
-                  className="text-gray-600  h-4 w-4 fill-current"
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlnsXlink="http://www.w3.org/1999/xlink"
-                  version="1.1"
-                  x="0px"
-                  y="0px"
-                  viewBox="0 0 56.966 56.966"
-                  xmlSpace="preserve"
-                  width="512px"
-                  height="512px"
+                <input
+                  className="border border-gray-300 placeholder-current h-10 px-5 pr-16  rounded-full text-sm focus:outline-none  "
+                  type="search"
+                  name="search"
+                  placeholder="Search"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                />
+
+                <button
+                  type="submit"
+                  className="absolute right-0 top-0 mt-3 mr-4 cursor-pointer"
                 >
-                  <path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
-                </svg>
-              </button>
+                  <svg
+                    className="text-gray-600  h-4 w-4 fill-current"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlnsXlink="http://www.w3.org/1999/xlink"
+                    version="1.1"
+                    x="0px"
+                    y="0px"
+                    viewBox="0 0 56.966 56.966"
+                    xmlSpace="preserve"
+                    width="512px"
+                    height="512px"
+                  >
+                    <path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
+                  </svg>
+                </button>
+              </form>
             </div>
           </li>
         </ul>
@@ -208,7 +254,7 @@ const Navbar = () => {
             >
               <div className="relative">
                 <AiOutlineShoppingCart size={24} />
-                {cartItemCount > 0 && (
+                {user && cartItemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                     {cartItemCount}
                   </span>
@@ -218,13 +264,26 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      <nav className="hidden lg:block mb-16">
-        <ul className="flex justify-center items-center gap-4">
-          <li>Home</li>
-          <li>Contact</li>
-          <li>About</li>
-          <li>Privacy</li>
-        </ul>
+      <nav className="hidden lg:flex justify-center gap-4 relative mb-16">
+        {tabs.map(({ label, to }) => {
+          const isActive = pathname === to;
+          return (
+            <Link
+              key={to}
+              to={to}
+              className="relative px-2 py-1  font-medium text-gray-700"
+            >
+              {label}
+              {isActive && (
+                <motion.div
+                  layoutId="underline"
+                  className="absolute left-0 right-0 -bottom-1 h-[2px] bg-violet-600 rounded"
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* mobile navbar */}

@@ -10,7 +10,7 @@ const PrivateRoute = () => {
 
   useEffect(() => {
     if (justLoggedOut) {
-      dispatch(clearLogoutFlag);
+      dispatch(clearLogoutFlag());
     }
   }, [justLoggedOut, dispatch]);
 

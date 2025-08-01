@@ -16,8 +16,8 @@ const router = require("express").Router();
 
 router.get("/", getAllProducts);
 router.get("/featured", getFeaturedProducts);
-router.get("/:id", getProductById);
 router.get("/search", searchProducts);
+router.get("/:id", getProductById);
 router
   .route(":productId/reviews")
   .post(authenticate, addReview)

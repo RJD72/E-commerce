@@ -9,9 +9,15 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Cart = () => {
-  const { data = [], isLoading, refetch } = useGetUserCartQuery();
+  const user = useSelector((state) => state.auth.user);
+  const {
+    data = [],
+    isLoading,
+    refetch,
+  } = useGetUserCartQuery(undefined, { skip: !user });
   const [updateCart] = useUpdateCartItemMutation();
   const [clearCart] = useClearCartMutation();
   const [createCheckoutSession] = useCreateCheckoutSessionMutation();

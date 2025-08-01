@@ -7,6 +7,7 @@ import { setCredentials } from "./redux/features/authSlice";
 import { setSessionLoading } from "./redux/features/sessionSlice";
 import Footer from "./components/Footer";
 import { ToastContainer } from "react-toastify";
+import { BASE_URL } from "./redux/constants";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -35,18 +36,21 @@ const App = () => {
       dispatch(setSessionLoading(true));
       try {
         const token = localStorage.getItem("refreshToken");
+
+        if (!token) {
+          setLoading(false);
+          dispatch(setSessionLoading(false));
+          return;
+        }
         // Send GET request to refresh endpoint
         // 'credentials: include' ensures cookies are sent (required for refresh tokens)
-        const res = await fetch(
-          "https://e-commerce-zk07.onrender.com/api/auth/refresh-token",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ refreshToken: token }),
-          }
-        );
+        const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken: token }),
+        });
 
         // Parse the JSON response
         const data = await res.json();
@@ -69,9 +73,9 @@ const App = () => {
         // Only navigate to login if the current route is protected
         const protectedRoutes = ["/profile", "/dashboard", "/admin", "/orders"];
 
-        const isProtected = protectedRoutes.some((path) => {
-          location.pathname.startsWith(path);
-        });
+        const isProtected = protectedRoutes.some((path) =>
+          location.pathname.startsWith(path)
+        );
 
         if (isProtected) {
           // You can optionally redirect the user to login here

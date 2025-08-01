@@ -37,6 +37,10 @@ import AdminCategory from "./pages/admin/AdminCategory.jsx";
 import Cart from "./pages/Cart.jsx";
 import SuccessPage from "./pages/SuccessPage.jsx";
 import CanceledPage from "./pages/CanceledPage.jsx";
+import SearchResults from "./pages/SearchResults.jsx";
+import Contact from "./pages/Contact.jsx";
+import About from "./pages/About.jsx";
+import Privacy from "./pages/Privacy.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -49,6 +53,10 @@ const router = createBrowserRouter(
       <Route path="/cart" element={<Cart />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/canceled" element={<CanceledPage />} />
+      <Route path="/search" element={<SearchResults />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
