@@ -41,6 +41,9 @@ import SearchResults from "./pages/SearchResults.jsx";
 import Contact from "./pages/Contact.jsx";
 import About from "./pages/About.jsx";
 import Privacy from "./pages/Privacy.jsx";
+import OrderDetails from "./pages/user/OrderDetails.jsx";
+import AddReview from "./pages/user/AddReview.jsx";
+import Wishlist from "./pages/user/Wishlist.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -70,9 +73,12 @@ const router = createBrowserRouter(
       <Route element={<PrivateRoute />}>
         <Route path="/profile" element={<Profile />}>
           <Route path="addresses" element={<Addresses />} />
+          <Route path="wishlist" element={<Wishlist />} />
           <Route path="orders" element={<Orders />} />
           <Route path="user-contact" element={<UserContact />} />
+          <Route path="orders/order-details/:id" element={<OrderDetails />} />
         </Route>
+        <Route path="/add-review/:productId" element={<AddReview />} />
       </Route>
 
       {/* Admin Routes */}

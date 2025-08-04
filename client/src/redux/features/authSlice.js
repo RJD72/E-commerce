@@ -19,7 +19,9 @@ const authSlice = createSlice({
       state.user = null;
       state.justLoggedOut = true;
     },
-    clearLogoutFlag: (state) => (state.justLoggedOut = false),
+    clearLogoutFlag: (state) => {
+      state.justLoggedOut = false;
+    },
   },
 });
 

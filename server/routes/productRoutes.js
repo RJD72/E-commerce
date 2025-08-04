@@ -6,6 +6,8 @@ const {
   getProductReviews,
   deleteReview,
   getFeaturedProducts,
+  getMyReview,
+  updateReview,
 } = require("../controllers/product_management/productController");
 const {
   authenticate,
@@ -19,15 +21,12 @@ router.get("/featured", getFeaturedProducts);
 router.get("/search", searchProducts);
 router.get("/:id", getProductById);
 router
-  .route(":productId/reviews")
+  .route("/:productId/reviews")
   .post(authenticate, addReview)
-  .get(getProductReviews);
+  .get(getProductReviews)
+  .put(authenticate, updateReview);
 
-router.delete(
-  "/:productId/reviews/:reviewId",
-  authenticate,
-  authorizeAdmin,
-  deleteReview
-);
+router.delete("/:productId/reviews/:reviewId", authenticate, deleteReview);
+router.get("/:productId/my-review", authenticate, getMyReview);
 
 module.exports = router;

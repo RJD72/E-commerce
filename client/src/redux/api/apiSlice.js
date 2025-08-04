@@ -27,7 +27,7 @@ export const apiSlice = createApi({
 
   // Define tag types that will be used for cache invalidation and automated refetching
   // These are like "labels" you assign to data in specific endpoints
-  tagTypes: ["Product", "User", "Auth", "Category"],
+  tagTypes: ["Product", "User", "Auth", "Category", "Review", "Wishlist"],
 
   // Define all endpoints in this section (you’ll extend this later with .injectEndpoints)
   endpoints: () => ({}),

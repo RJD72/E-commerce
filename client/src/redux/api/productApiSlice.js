@@ -34,6 +34,45 @@ export const productApiSlice = apiSlice.injectEndpoints({
       transformResponse: (response) => response.data,
     }),
 
+    addReview: builder.mutation({
+      query: ({ productId, rating, comment }) => ({
+        url: `${PRODUCT_URL}/${productId}/reviews`,
+        method: "POST",
+        body: { rating, comment },
+      }),
+      invalidatesTags: ["Product", "Review"],
+    }),
+
+    getMyReview: builder.query({
+      query: (productId) => `${PRODUCT_URL}/${productId}/my-review`,
+      providesTags: (result, error, productId) => [
+        { type: "Review", id: productId },
+      ],
+    }),
+
+    updateReview: builder.mutation({
+      query: ({ productId, rating, comment }) => ({
+        url: `${PRODUCT_URL}/${productId}/reviews`,
+        method: "PUT",
+        body: { rating, comment },
+      }),
+      invalidatesTags: (result, error, { productId }) => [
+        { type: "Review", id: productId },
+        { type: "Product", id: productId },
+      ],
+    }),
+
+    deleteReview: builder.mutation({
+      query: ({ productId, reviewId }) => ({
+        url: `${PRODUCT_URL}/${productId}/reviews/${reviewId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, { productId }) => [
+        { type: "Review", id: productId },
+        { type: "Product", id: productId },
+      ],
+    }),
+
     // productApiSlice.js - update the searchProducts endpoint
     searchProducts: builder.query({
       query: ({
@@ -69,4 +108,8 @@ export const {
   useGetProductByIdQuery,
   useGetFeaturedProductsQuery,
   useSearchProductsQuery,
+  useAddReviewMutation,
+  useGetMyReviewQuery,
+  useUpdateReviewMutation,
+  useDeleteReviewMutation,
 } = productApiSlice;

@@ -109,3 +109,27 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
   res.status(201).json({ message: "Order placed successfully", order });
 });
+
+// @desc    Get a specific order by ID for the logged-in user
+// @route   GET /api/orders/:id
+// @access  Private
+exports.getSingleOrder = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const orderId = req.params.id;
+
+  const order = await Order.findById(orderId)
+    .populate("items.product", "name price images reviews")
+    .populate("user", "firstName lastName email");
+
+  if (!order) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+
+  if (order.user._id.toString() !== userId.toString()) {
+    return res
+      .status(403)
+      .json({ message: "Not authorized to view this order" });
+  }
+
+  res.status(200).json(order);
+});

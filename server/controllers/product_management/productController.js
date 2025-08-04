@@ -359,3 +359,72 @@ exports.deleteReview = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: "Review deleted successfully" });
 });
+
+// @desc    Get current user's review for a product
+// @route   GET /api/products/:productId/my-review
+// @access  Private
+exports.getMyReview = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    res.status(400);
+    throw new Error("Invalid product ID");
+  }
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const review = product.reviews.find(
+    (r) => r.user.toString() === req.user._id.toString()
+  );
+
+  if (!review) {
+    res.status(404);
+    throw new Error("Review not found");
+  }
+
+  res.status(200).json({
+    _id: review._id,
+    rating: review.rating,
+    comment: review.comment,
+  });
+});
+
+// @desc    Update current user's review for a product
+// @route   PUT /api/products/:productId/reviews
+// @access  Private
+exports.updateReview = asyncHandler(async (req, res) => {
+  const { rating, comment } = req.body;
+  const { productId } = req.params;
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const review = product.reviews.find(
+    (r) => r.user.toString() === req.user._id.toString()
+  );
+
+  if (!review) {
+    res.status(404);
+    throw new Error("Review not found");
+  }
+
+  review.rating = rating !== undefined ? Number(rating) : review.rating;
+  review.comment = comment || review.comment;
+  review.updatedAt = new Date();
+
+  // Recalculate average rating
+  product.rating =
+    product.reviews.reduce((sum, r) => r.rating + sum, 0) /
+    product.reviews.length;
+
+  await product.save();
+
+  res.status(200).json({ message: "Review updated successfully" });
+});
