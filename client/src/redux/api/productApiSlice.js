@@ -73,6 +73,15 @@ export const productApiSlice = apiSlice.injectEndpoints({
       ],
     }),
 
+    getProductReviews: builder.query({
+      query: ({ productId }) => ({
+        url: `${PRODUCT_URL}/${productId}/reviews`,
+      }),
+      providesTags: (result, error, { productId }) => [
+        { type: "Review", id: productId },
+      ],
+    }),
+
     // productApiSlice.js - update the searchProducts endpoint
     searchProducts: builder.query({
       query: ({
@@ -112,4 +121,5 @@ export const {
   useGetMyReviewQuery,
   useUpdateReviewMutation,
   useDeleteReviewMutation,
+  useGetProductReviewsQuery,
 } = productApiSlice;

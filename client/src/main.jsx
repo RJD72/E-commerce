@@ -44,6 +44,8 @@ import Privacy from "./pages/Privacy.jsx";
 import OrderDetails from "./pages/user/OrderDetails.jsx";
 import AddReview from "./pages/user/AddReview.jsx";
 import Wishlist from "./pages/user/Wishlist.jsx";
+import AdminOrders from "./pages/admin/AdminOrders.jsx";
+import AdminOrderDetails from "./pages/admin/AdminOrderDetails.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -85,9 +87,9 @@ const router = createBrowserRouter(
       <Route element={<AdminRoute />}>
         <Route path="/admin-panel" element={<AdminPanel />}>
           <Route path="admin-users" element={<AdminUsers />} />
+          <Route path="admin-users/details/:id" element={<AdminUserDetail />} />
           <Route path="admin-categories" element={<AdminCategory />} />
 
-          <Route path="admin-users/details/:id" element={<AdminUserDetail />} />
           <Route path="admin-products" element={<AdminProducts />} />
           <Route
             path="admin-products/add-product"
@@ -96,6 +98,11 @@ const router = createBrowserRouter(
           <Route
             path="admin-products/details/:id"
             element={<AdminProductDetails />}
+          />
+          <Route path="admin-orders" element={<AdminOrders />} />
+          <Route
+            path="admin-orders/order-details/:id"
+            element={<AdminOrderDetails />}
           />
         </Route>
       </Route>

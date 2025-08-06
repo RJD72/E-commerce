@@ -46,6 +46,36 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Products"],
     }),
+
+    getAllOrdersAdmin: builder.query({
+      query: ({ sortBy, order, page, limit, search, status }) => {
+        const params = new URLSearchParams({
+          sortBy,
+          order,
+          page,
+          limit,
+          search,
+          status,
+        });
+        return { url: `${ADMIN_URL}/orders?${params.toString()}` };
+      },
+      providesTags: ["Orders"],
+    }),
+
+    getOrderById: builder.query({
+      query: (id) => ({
+        url: `${ADMIN_URL}/orders/${id}`,
+      }),
+    }),
+
+    updateOrderStatus: builder.mutation({
+      query: ({ id, status }) => ({
+        url: `${ADMIN_URL}/orders/${id}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Orders"],
+    }),
   }),
 });
 
@@ -56,4 +86,7 @@ export const {
   useUpdateProductMutation,
   useDeleteProductMutation,
   useCreateProductMutation,
+  useGetAllOrdersAdminQuery,
+  useGetOrderByIdQuery,
+  useUpdateOrderStatusMutation,
 } = adminApiSlice;

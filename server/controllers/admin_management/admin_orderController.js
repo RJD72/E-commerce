@@ -5,12 +5,69 @@ const { asyncHandler } = require("../../middleware/asyncHandler");
 // @route   GET /api/admin/orders
 // @access  Private/Admin
 exports.getAllOrdersAdmin = asyncHandler(async (req, res) => {
-  // Fetch all orders and populate user fields
-  const orders = await Order.find()
-    .populate("user", "firstName lastName email phone") // Pull these fields from the User model
-    .sort({ createdAt: -1 }); // Optional: show newest first
+  const {
+    sortBy = "createdAt",
+    order = "desc",
+    page = 1,
+    limit = 10,
+    search = "",
+    status = "",
+  } = req.query;
 
-  res.status(200).json(orders);
+  const sortField = [
+    "createdAt",
+    "status",
+    "isPaid",
+    "deliveredAt",
+    "_id",
+  ].includes(sortBy)
+    ? sortBy
+    : "createdAt";
+  const sortOrder = order === "asc" ? 1 : -1;
+
+  const skip = (page - 1) * limit;
+
+  const keywordFilter = search
+    ? {
+        $or: [
+          { "user.firstName": { $regex: search, $options: "i" } },
+          { "user.lastName": { $regex: search, $options: "i" } },
+          { "user.email": { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const statusFilter = status ? { status } : {};
+
+  const matchStage = { $and: [keywordFilter, statusFilter] };
+
+  const aggregate = Order.aggregate([
+    { $match: {} }, // Mongoose requires an initial $match even if empty
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $match: matchStage },
+    { $sort: { [sortField]: sortOrder } },
+    { $skip: Number(skip) },
+    { $limit: Number(limit) },
+  ]);
+
+  const total = await Order.countDocuments();
+
+  const orders = await aggregate.exec();
+
+  res.status(200).json({
+    orders,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
+    total,
+  });
 });
 
 // @desc    Admin fetches an order by its ID
