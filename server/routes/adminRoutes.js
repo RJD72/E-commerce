@@ -21,6 +21,14 @@ const {
 } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
+const {
+  getMonthlySales,
+  getTopProducts,
+  getOrderStatusStats,
+  getPaymentMethodStats,
+} = require("../controllers/dashboard_management/dashboardController");
+
+// Admin product routes
 // Support multiple images via upload.fields([{ name: 'images' }])
 router.post(
   "/products",
@@ -40,6 +48,7 @@ router
   )
   .delete(authenticate, authorizeAdmin, deleteProductByIdAdmin);
 
+// Admin order routes
 router.get("/orders", authenticate, authorizeAdmin, getAllOrdersAdmin);
 router.get("/orders/:id", authenticate, authorizeAdmin, getOrderByIdAdmin);
 router.patch(
@@ -49,6 +58,7 @@ router.patch(
   updateOrderStatusAdmin
 );
 
+// Admin user routes
 router.get("/users", authenticate, authorizeAdmin, getAllUsers);
 router.get("/users/:id", authenticate, authorizeAdmin, getUserById);
 router.patch(
@@ -58,4 +68,24 @@ router.patch(
   toggleUserStatus
 );
 
+// Admin dashboard routes
+router.get("/dashboard/sales", authenticate, authorizeAdmin, getMonthlySales);
+router.get(
+  "/dashboard/top-products",
+  authenticate,
+  authorizeAdmin,
+  getTopProducts
+);
+router.get(
+  "/dashboard/order-status",
+  authenticate,
+  authorizeAdmin,
+  getOrderStatusStats
+);
+router.get(
+  "/dashboard/payment-methods",
+  authenticate,
+  authorizeAdmin,
+  getPaymentMethodStats
+);
 module.exports = router;

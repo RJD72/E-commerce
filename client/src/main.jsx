@@ -46,6 +46,7 @@ import AddReview from "./pages/user/AddReview.jsx";
 import Wishlist from "./pages/user/Wishlist.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -104,6 +105,7 @@ const router = createBrowserRouter(
             path="admin-orders/order-details/:id"
             element={<AdminOrderDetails />}
           />
+          <Route path="admin-dashboard" element={<AdminDashboard />} />
         </Route>
       </Route>
     </Route>

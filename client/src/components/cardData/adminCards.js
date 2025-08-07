@@ -19,4 +19,9 @@ export const adminCards = [
     src: "https://media.istockphoto.com/id/173872898/photo/spiral-notebook-on-laptop-with-blank-wishlist.jpg?s=2048x2048&w=is&k=20&c=P4iKSWO0tNj2QeJDW5LTvRwMiU7Yvqysx3mPUygX43M=",
     link: "admin-categories",
   },
+  {
+    title: "Dashboard",
+    src: "https://media.istockphoto.com/id/1954841243/photo/data-analysis-chart-graph-3d-statistics-background.jpg?s=2048x2048&w=is&k=20&c=iiUzvpDryyGCoLgayiyCir9ADn_p4e2LF9equ6W_zus=",
+    link: "admin-dashboard",
+  },
 ];

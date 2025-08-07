@@ -76,6 +76,19 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Orders"],
     }),
+
+    getDashboardSales: builder.query({
+      query: () => `${ADMIN_URL}/dashboard/sales`,
+    }),
+    getTopProducts: builder.query({
+      query: () => `${ADMIN_URL}/dashboard/top-products`,
+    }),
+    getOrderStatusStats: builder.query({
+      query: () => `${ADMIN_URL}/dashboard/order-status`,
+    }),
+    getPaymentMethodStats: builder.query({
+      query: () => `${ADMIN_URL}/dashboard/payment-methods`,
+    }),
   }),
 });
 
@@ -89,4 +102,8 @@ export const {
   useGetAllOrdersAdminQuery,
   useGetOrderByIdQuery,
   useUpdateOrderStatusMutation,
+  useGetDashboardSalesQuery,
+  useGetTopProductsQuery,
+  useGetOrderStatusStatsQuery,
+  useGetPaymentMethodStatsQuery,
 } = adminApiSlice;
