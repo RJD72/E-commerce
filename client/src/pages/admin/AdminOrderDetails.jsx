@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import {
-  useGetOrderByIdQuery,
+  useGetOrderByIdAdminQuery,
   useUpdateOrderStatusMutation,
 } from "../../redux/api/adminApiSlice";
 import { format } from "date-fns";
@@ -8,7 +8,12 @@ import { useState } from "react";
 
 const AdminOrderDetails = () => {
   const { id } = useParams();
-  const { data: order, isLoading, error, refetch } = useGetOrderByIdQuery(id);
+  const {
+    data: order,
+    isLoading,
+    error,
+    refetch,
+  } = useGetOrderByIdAdminQuery(id);
   const [updateOrderStatus, { isLoading: isUpdating }] =
     useUpdateOrderStatusMutation();
   const [newStatus, setNewStatus] = useState("");

@@ -77,10 +77,9 @@ exports.getOrderByIdAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params; // Get order ID from route
 
   // Find order by ID and populate user info
-  const order = await Order.findById(id).populate(
-    "user",
-    "firstName lastName email phone"
-  );
+  const order = await Order.findById(id)
+    .populate("user", "firstName lastName email phone")
+    .populate("items.product", "name price images");
 
   // If not found, return 404
   if (!order) {

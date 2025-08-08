@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -41,7 +40,14 @@ const Dashboard = () => {
             <XAxis dataKey="month" />
             <YAxis />
             <CartesianGrid stroke="#ccc" />
-            <Tooltip />
+            <Tooltip
+              formatter={(value, name) => {
+                if (name === "revenue") {
+                  return [`$${Number(value).toFixed(2)}`, "Revenue"];
+                }
+                return value;
+              }}
+            />
             <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
           </LineChart>
         </ResponsiveContainer>
