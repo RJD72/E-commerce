@@ -86,7 +86,7 @@ const AdminCategory = () => {
     <section className="">
       <div className="max-w-3xl mx-auto">
         <BackButton fallback="/admin-panel" />
-        <h2 className="text-2xl font-bold my-4">All Categories</h2>
+        <h2 className="text-2xl font-bold my-6">All Categories</h2>
         <table className="table-auto w-full border-collapse border border-gray-300">
           <thead>
             <tr>

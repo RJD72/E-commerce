@@ -22,9 +22,9 @@ const Home = () => {
 
   return (
     <>
-      <section className="bg-off-white-linen">
-        <div className="grid grid-cols-1 lg:grid-cols-2 bg-warm-taupe mx-auto justify-center items-center">
-          <div className="pt-16 px-3 flex flex-col justify-center items-center">
+      <section className="shadow-lg">
+        <div className="grid grid-cols-1 lg:grid-cols-2 mx-auto justify-center items-center">
+          <div className="pt-16 px-3 flex flex-col justify-center items-center rounded-l-lg">
             <h2 className="text-4xl font-bold flex flex-col">
               <span>Summer Clothing</span>
               <span className="text-burnt-mustard text-center"> Sale</span>
@@ -37,13 +37,13 @@ const Home = () => {
             </div>
           </div>
           <div className="">
-            <img src={Store} />
+            <img src={Store} className="rounded-r-lg" />
           </div>
         </div>
       </section>
-      <section className="bg-off-white-linen py-8 px-2">
+      <section className=" pt-16 px-2">
         <div className="max-w-7xl mx-auto">
-          <h3 className="font-bold text-2xl mb-6">Featured Products</h3>
+          <h3 className="font-bold text-3xl mb-6">Featured Products</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4   gap-8">
             {productLoading ? (
               <div>Loading...</div>
@@ -64,9 +64,9 @@ const Home = () => {
           </div>
         </div>
       </section>
-      <section className="bg-off-white-linen pt-8 pb-24 px-2">
+      <section className=" pt-16 pb-24 px-2">
         <div className="max-w-7xl mx-auto">
-          <h3 className="font-bold text-2xl mb-6 text-center md:text-left">
+          <h3 className="font-bold text-3xl mb-6 text-center md:text-left">
             Shop By Categories
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4   gap-8">

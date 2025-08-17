@@ -37,14 +37,14 @@ const CategoryProducts = () => {
 
   if (response.products.length === 0) {
     return (
-      <section className="flex justify-center items-center bg-off-white-linen min-h-screen">
+      <section className="flex justify-center items-center  min-h-screen">
         <div>There are no products in this category.</div>
       </section>
     );
   }
 
   return (
-    <section className="bg-off-white-linen py-8 px-2">
+    <section className=" py-8 px-2">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-6 capitalize">
           {response?.category?.name}

@@ -27,7 +27,7 @@ const MotionButton = ({ text, icon }) => {
         className="relative z-10  text-center flex justify-center items-center gap-2 "
         variants={{
           rest: {
-            color: "#7F8C8D", // initial slate gray
+            color: "#000", // initial slate gray
           },
           hover: {
             color: "#ffffff", // animate to white

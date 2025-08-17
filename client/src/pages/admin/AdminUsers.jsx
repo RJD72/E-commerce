@@ -12,7 +12,7 @@ const AdminUsers = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <BackButton fallback="/admin-panel" />
-      <h2 className="text-2xl font-bold my-4">All Users</h2>
+      <h2 className="text-2xl font-bold my-6">All Users</h2>
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
           <tr>

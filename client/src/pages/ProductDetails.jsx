@@ -81,11 +81,11 @@ const ProductDetails = () => {
     <section className="">
       <div className="flex flex-col md:grid md:grid-cols-12 p-2 lg:px-8 mx-auto lg:gap-6">
         {/* Left Column */}
-        <div className="p-2 md:px-6 md:col-span-6 lg:col-span-4 ">
+        <div className="p-2 md:px-6 md:col-span-6 lg:col-span-4 h-[500px]">
           <img
             src={data.images}
             alt={data.name}
-            className="rounded-lg w-full"
+            className="rounded-lg h-full object-center"
           />
         </div>
 
@@ -118,10 +118,10 @@ const ProductDetails = () => {
           <div className="">
             <div
               className={`text-xl ${
-                data.stock ? "text-green-500" : "text-red-50"
+                data.stock > 0 ? "text-green-500" : "text-red-500"
               }`}
             >
-              {data.stock ? `In Stock` : "Out of Stock"}
+              {data.stock > 0 ? `In Stock` : "Out of Stock"}
             </div>
             <p>{data.stock} left</p>
           </div>
@@ -136,12 +136,14 @@ const ProductDetails = () => {
               min={1}
               max={data.stock}
               value={quantity}
+              disabled={data.stock === 0}
               onChange={(e) => setQuantity(e.target.value)}
               className="border border-gray-400 px-4 py-1 rounded-full text-center"
             />
             <button
-              className="w-full bg-midnight-navy hover:bg-midnight-navy/90 text-white py-2 px-4 rounded-full text-sm font-medium cursor-pointer"
+              className="w-full bg-midnight-navy hover:bg-midnight-navy/90 text-white py-2 px-4 rounded-full text-sm font-medium cursor-pointer disabled:bg-gray-400 disabled:text-white disabled:cursor-not-allowed disabled:hover:bg-gray-400"
               onClick={handleAddToCart}
+              disabled={data.stock === 0}
             >
               Add to Cart
             </button>

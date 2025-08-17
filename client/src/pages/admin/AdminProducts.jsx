@@ -29,7 +29,7 @@ const AdminProducts = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <BackButton fallback="/admin-panel" />
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold my-4">All Products</h2>
+        <h2 className="text-2xl font-bold my-6">All Products</h2>
         <div className="h-full">
           <Link to={"add-product"}>
             <button

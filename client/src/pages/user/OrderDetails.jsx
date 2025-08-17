@@ -19,7 +19,7 @@ const OrderDetails = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <BackButton fallback="/orders" />
-      <h2 className="text-2xl font-bold mb-4">Order #{order._id}</h2>
+      <h2 className="text-2xl font-bold my-6">Order #{order._id}</h2>
 
       <div className="mb-6">
         <p>

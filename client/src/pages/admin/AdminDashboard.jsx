@@ -19,6 +19,7 @@ import {
   useGetPaymentMethodStatsQuery,
   useGetTopProductsQuery,
 } from "../../redux/api/adminApiSlice";
+import BackButton from "../../components/BackButton";
 
 const Dashboard = () => {
   const { data: salesData = [] } = useGetDashboardSalesQuery();
@@ -29,8 +30,9 @@ const Dashboard = () => {
   const COLORS = ["#FFBB28", "#00C49F", "#0088FE", "#FF8042", "#FF6384"];
 
   return (
-    <div className="p-6 space-y-10">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <div className="p-6 space-y-10 max-w-7xl mx-auto">
+      <BackButton fallback="/admin-panel" />
+      <h1 className="text-3xl font-bold my-6">Admin Dashboard</h1>
 
       {/* Sales Over Time */}
       <section className="bg-white p-4 rounded shadow">

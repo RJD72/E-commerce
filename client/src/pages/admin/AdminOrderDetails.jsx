@@ -5,6 +5,7 @@ import {
 } from "../../redux/api/adminApiSlice";
 import { format } from "date-fns";
 import { useState } from "react";
+import BackButton from "../../components/BackButton";
 
 const AdminOrderDetails = () => {
   const { id } = useParams();
@@ -30,8 +31,9 @@ const AdminOrderDetails = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Order Details</h1>
+    <div className="p-6 max-w-7xl mx-auto">
+      <BackButton fallback="/admin-panel" />
+      <h1 className="text-2xl font-bold my-6">Order Details</h1>
 
       {isLoading && <p>Loading order...</p>}
       {error && <p className="text-red-500">Error loading order details</p>}

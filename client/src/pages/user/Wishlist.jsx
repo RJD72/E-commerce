@@ -4,12 +4,26 @@ import {
 } from "../../redux/api/wishlistApiSlice";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import BackButton from "../../components/BackButton";
+
+// Tiny helper so we don’t repeat loading state text in two places
+const RemoveButton = ({ removing, onClick }) => (
+  <button
+    onClick={onClick}
+    className="text-red-600 hover:underline disabled:opacity-50"
+    disabled={removing}
+    aria-busy={removing ? "true" : "false"}
+  >
+    {removing ? "Removing..." : "Remove"}
+  </button>
+);
 
 const Wishlist = () => {
   const { data, isLoading, isError } = useGetWishlistQuery();
   const [removeFromWishlist] = useRemoveFromWishlistMutation();
   const [removingId, setRemovingId] = useState(null);
 
+  // Simple client-side pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
@@ -17,6 +31,7 @@ const Wishlist = () => {
     try {
       setRemovingId(productId);
       await removeFromWishlist(productId).unwrap();
+      // Optional: you could optimistically update cache via RTKQ if desired
     } catch (err) {
       console.error("Failed to remove from wishlist:", err);
     } finally {
@@ -31,7 +46,7 @@ const Wishlist = () => {
   if (data.wishlist.length === 0)
     return <p className="text-center mt-10">Your wishlist is empty.</p>;
 
-  // Pagination logic
+  // Slice the current page items
   const totalPages = Math.ceil(data.wishlist.length / itemsPerPage);
   const paginatedItems = data.wishlist.slice(
     (currentPage - 1) * itemsPerPage,
@@ -40,49 +55,106 @@ const Wishlist = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6">My Wishlist</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-3 border-r border-gray-300">Image</th>
-              <th className="text-left p-3 border-r border-gray-300">Name</th>
-              <th className="text-left p-3">Remove</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedItems.map((product) => (
-              <tr key={product._id} className="border-t border-gray-300">
-                <td className="p-3 border-r border-gray-300">
-                  <Link to={`/product-details/${product._id}`}>
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  </Link>
-                </td>
-                <td className="p-3 border-r border-gray-300">
-                  <Link
-                    to={`/product-details/${product._id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {product.name}
-                  </Link>
-                </td>
-                <td className="p-3">
-                  <button
-                    onClick={() => handleRemove(product._id)}
-                    className="text-red-600 hover:underline disabled:opacity-50"
-                    disabled={removingId === product._id}
-                  >
-                    {removingId === product._id ? "Removing..." : "Remove"}
-                  </button>
-                </td>
+      <BackButton fallback="/" />
+      <h2 className="text-2xl font-bold my-6">My Wishlist</h2>
+
+      {/* ===== Mobile: Card list (below md) ===== */}
+      <ul className="md:hidden grid grid-cols-1 gap-3">
+        {paginatedItems.map((product) => (
+          <li
+            key={product._id}
+            className="flex gap-4 rounded-xl border border-gray-200 p-4 shadow-sm"
+          >
+            <Link
+              to={`/product-details/${product._id}`}
+              className="shrink-0"
+              aria-label={`Go to ${product.name} details`}
+            >
+              <img
+                src={product.images?.[0]}
+                alt={product.name}
+                className="w-20 h-20 object-cover rounded"
+                loading="lazy"
+              />
+            </Link>
+
+            <div className="min-w-0 flex-1">
+              <Link
+                to={`/product-details/${product._id}`}
+                className="text-base font-medium text-gray-900 hover:underline line-clamp-2"
+              >
+                {product.name}
+              </Link>
+
+              <div className="mt-3">
+                <RemoveButton
+                  removing={removingId === product._id}
+                  onClick={() => handleRemove(product._id)}
+                />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* ===== Desktop: Real table (md and up) ===== */}
+      <div className="hidden md:block ">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-[0_5px_15px_rgba(0,0,0,0.35)]">
+          <table className="min-w-full ">
+            <thead className="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  className="text-left px-4 py-3 text-sm font-semibold text-gray-700"
+                >
+                  Image
+                </th>
+                <th
+                  scope="col"
+                  className="text-left px-4 py-3 text-sm font-semibold text-gray-700"
+                >
+                  Name
+                </th>
+                <th
+                  scope="col"
+                  className="text-left px-4 py-3 text-sm font-semibold text-gray-700"
+                >
+                  Remove
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {paginatedItems.map((product) => (
+                <tr key={product._id}>
+                  <td className="px-4 py-3">
+                    <Link to={`/product-details/${product._id}`}>
+                      <img
+                        src={product.images?.[0]}
+                        alt={product.name}
+                        className="w-16 h-16 object-cover rounded"
+                        loading="lazy"
+                      />
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      to={`/product-details/${product._id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {product.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <RemoveButton
+                      removing={removingId === product._id}
+                      onClick={() => handleRemove(product._id)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination Controls */}
@@ -97,6 +169,7 @@ const Wishlist = () => {
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-700 hover:bg-gray-100"
               }`}
+              aria-current={currentPage === index + 1 ? "page" : undefined}
             >
               {index + 1}
             </button>

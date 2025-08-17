@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGetAllOrdersAdminQuery } from "../../redux/api/adminApiSlice";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
+import BackButton from "../../components/BackButton";
 
 const columns = [
   { key: "_id", label: "Order ID" },
@@ -65,8 +66,9 @@ const AdminOrders = () => {
   }, [search]);
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">All Orders</h1>
+    <div className="p-4 max-w-7xl mx-auto">
+      <BackButton fallback="/admin-panel" />
+      <h1 className="text-2xl font-semibold my-6">All Orders</h1>
 
       <div className="mb-4 flex gap-4">
         <input
