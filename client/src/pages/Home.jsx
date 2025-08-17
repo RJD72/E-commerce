@@ -24,7 +24,7 @@ const Home = () => {
     <>
       <section className="shadow-lg">
         <div className="grid grid-cols-1 lg:grid-cols-2 mx-auto justify-center items-center">
-          <div className="pt-16 px-3 flex flex-col justify-center items-center rounded-l-lg">
+          <div className="pt-16 px-3 flex flex-col justify-center items-center">
             <h2 className="text-4xl font-bold flex flex-col">
               <span>Summer Clothing</span>
               <span className="text-burnt-mustard text-center"> Sale</span>
@@ -37,7 +37,7 @@ const Home = () => {
             </div>
           </div>
           <div className="">
-            <img src={Store} className="rounded-r-lg" />
+            <img src={Store} className="" />
           </div>
         </div>
       </section>
