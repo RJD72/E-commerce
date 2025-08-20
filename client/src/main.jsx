@@ -47,6 +47,7 @@ import Wishlist from "./pages/user/Wishlist.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import PaymentFailed from "./pages/PaymentFailed.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -58,6 +59,7 @@ const router = createBrowserRouter(
       <Route path="/product-details/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/success" element={<SuccessPage />} />
+      <Route path="/failed" element={<PaymentFailed />} />
       <Route path="/canceled" element={<CanceledPage />} />
       <Route path="/search" element={<SearchResults />} />
       <Route path="/contact" element={<Contact />} />
