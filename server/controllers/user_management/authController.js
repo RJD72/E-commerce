@@ -88,7 +88,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(userId, { isVerified: true });
 
     // Respond with a success message
-    res.redirect("http://localhost:5173/email-verified");
+    res.redirect("https://e-commerce-zk07.onrender.com/email-verified");
   } catch (error) {
     // If the token is invalid or expired, return a 400 Bad Request error
     res.status(400).json({ message: "Invalid or expired token" });
@@ -226,7 +226,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 
   // Step 5: Create a password reset URL using the plain token
   // This URL will be sent in the email, and the user will click it to reset their password
-  const resetUrl = `http://localhost:5173/reset-password/${token}`;
+  const resetUrl = `https://e-commerce-zk07.onrender.com/reset-password/${token}`;
 
   // console.log("Raw token", token);
   // console.log("Reset token", resetUrl);
@@ -323,7 +323,7 @@ exports.resendVerificationEmail = asyncHandler(async (req, res) => {
   );
 
   // Step 5: Compose the email verification URL (to your frontend)
-  const verificationUrl = `http://localhost:5173/verify-email/${token}`;
+  const verificationUrl = `https://e-commerce-zk07.onrender.com/verify-email/${token}`;
 
   // Step 6: Send email with the new verification link
   await sendEmail({
