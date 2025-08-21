@@ -60,7 +60,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
   });
 
   // Create a link that the user will click to verify their email
-  const verifyLink = `http://localhost:5000/api/auth/verify-email?token=${token}`;
+  const verifyLink = `https://e-commerce-zk07.onrender.com/api/auth/verify-email?token=${token}`;
 
   // Send the email to the user with the verification link
   await sendEmail(
