@@ -88,7 +88,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(userId, { isVerified: true });
 
     // Respond with a success message
-    res.redirect("https://e-commerce-zk07.onrender.com/email-verified");
+    res.redirect("https://marketplacefront.netlify.app/email-verified");
   } catch (error) {
     // If the token is invalid or expired, return a 400 Bad Request error
     res.status(400).json({ message: "Invalid or expired token" });
